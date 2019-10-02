@@ -1,0 +1,27 @@
+.NewProject__container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.NewProject__title {
+  text-align: center;
+  margin-top: 40px;
+  font-size: 30px;
+}
+
+.NewProject__step {
+  margin-top: 20px;
+  font-size: 20px;
+}
+
+.NewProject__stepTitle {
+  text-align: center;
+}
+
+.NewProject__uploadFile {
+}
+
+.NewProject__description {
+}

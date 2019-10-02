@@ -1,0 +1,17 @@
+.Sensors {
+  display: flex;
+}
+
+.SensorsList {
+  width: 150px;
+  background: lightgrey;
+}
+
+.CurrentSensor {
+  background: white;
+  margin-left: 30px;
+}
+
+.SelectedSensor {
+  background: white;
+}
