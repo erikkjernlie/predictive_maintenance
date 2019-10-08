@@ -3,7 +3,9 @@ import { Router, Route, Switch } from "react-router-dom";
 import Navbar from "./shared/Navbar/Navbar";
 import Dashboard from "./Routes/Dashboard/Dashboard";
 import Sensors from "./Routes/Sensors/Sensors";
+import Upload from "./Components/Upload/Upload";
 import NewProject from "./Routes/NewProject/NewProject";
+import Project from "./Routes/Project/Project";
 import { createBrowserHistory } from "history";
 import { fetchModels } from "./stores/models/modelsActions";
 // import { fetchSensors } from "./stores/sensors/sensorsActions";
@@ -35,7 +37,11 @@ const App = () => {
             render={props => <Dashboard {...props} />}
           />
           <Route path="/sensors" render={props => <Sensors {...props} />} />
-          <Route exact path="/" render={props => <NewProject {...props} />} />
+          <Route exact path="/" render={props => <Upload {...props} />} />
+          <Route
+            path={`/:projectName`}
+            render={props => <Project {...props} />}
+          />
         </Switch>
       </Router>
     </div>

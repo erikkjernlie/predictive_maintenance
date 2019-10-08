@@ -31,57 +31,59 @@ const NewProject = props => {
   };
 
   return (
-    <div className="NewProject__container">
-      <div className="NewProject__title">Welcome</div>
-      <div className="NewProject__step">
-        <div className="NewProject__stepTitle">Step 1</div>
-        <div className="NewProject__uploadFile">
-          <CSVReader
-            cssClass="react-csv-input"
-            label=""
-            onFileLoaded={uploadData}
-          />
+    <div>
+      <div className="NewProject__container">
+        <div className="NewProject__title">Welcome</div>
+        <div className="NewProject__step">
+          <div className="NewProject__stepTitle">Step 1</div>
+          <div className="NewProject__uploadFile">
+            <CSVReader
+              cssClass="react-csv-input"
+              label=""
+              onFileLoaded={uploadData}
+            />
+          </div>
         </div>
-      </div>
-      <div className="NewProject__step">
-        {step2 && <div className="NewProject__stepTitle">Step 2</div>}
-        {step2 && (
-          <div className="NewProject__description">
-            Select URL for datastream
+        <div className="NewProject__step">
+          {step2 && <div className="NewProject__stepTitle">Step 2</div>}
+          {step2 && (
+            <div className="NewProject__description">
+              Select URL for datastream
+            </div>
+          )}
+          {step2 && <input onChange={handleChange} />}
+        </div>
+        <div className="NewProject__step">
+          {step3 && (
+            <React.Fragment>
+              <div className="NewProject__stepTitle">Step 3</div>
+              <div className="NewProject__description">
+                Choose values for sensors
+              </div>
+              <table>
+                <tbody>
+                  <tr>
+                    <th>Sensor </th>
+                    <th>Input</th>
+                    <th>output</th>
+                    <th>internal sensor</th>
+                    <th>Unit</th>
+                  </tr>
+                  {sensorNames &&
+                    sensorNames.map(sensor => <AddSensor sensor={sensor} />)}
+                </tbody>
+              </table>
+            </React.Fragment>
+          )}
+        </div>
+        {step3 && (
+          <div className="NewProject__step">
+            <Link to="sensors">
+              <button>Finish setup</button>
+            </Link>
           </div>
         )}
-        {step2 && <input onChange={handleChange} />}
       </div>
-      <div className="NewProject__step">
-        {step3 && (
-          <React.Fragment>
-            <div className="NewProject__stepTitle">Step 3</div>
-            <div className="NewProject__description">
-              Choose values for sensors
-            </div>
-            <table>
-              <tbody>
-                <tr>
-                  <th>Sensor </th>
-                  <th>Input</th>
-                  <th>output</th>
-                  <th>internal sensor</th>
-                  <th>Unit</th>
-                </tr>
-                {sensorNames &&
-                  sensorNames.map(sensor => <AddSensor sensor={sensor} />)}
-              </tbody>
-            </table>
-          </React.Fragment>
-        )}
-      </div>
-      {step3 && (
-        <div className="NewProject__step">
-          <Link to="sensors">
-            <button>Finish setup</button>
-          </Link>
-        </div>
-      )}
     </div>
   );
 };

@@ -1,0 +1,42 @@
+.Link {
+  margin: 5px 0px;
+  color: grey;
+}
+
+.Link:hover {
+  color: black;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.ExistingProjects__Title {
+  font-size: 24px;
+}
+
+.ExistingProject__Container {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.ExistingProjects__Projects {
+  max-height: 200px;
+  overflow: auto;
+}
+
+.Content {
+  margin-top: 20px;
+}
+
+.ProjectName {
+  font-size: 14px;
+  color: grey;
+}
+
+.Option {
+  font-size: 18px;
+}
