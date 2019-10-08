@@ -5,6 +5,7 @@
   "dependencies": {
     "@material-ui/core": "^4.4.3",
     "@tensorflow/tfjs": "^1.2.9",
+    "@tensorflow/tfjs-vis": "^1.2.0",
     "d3": "^5.12.0",
     "firebase": "^7.0.0",
     "plotly.js": "^1.49.5",

@@ -11,9 +11,10 @@ const Sensor = props => {
   };
 
   const newData = props.dataPoints.map(
-    dataPointForAllSensors =>
-      dataPointForAllSensors[props.sensors.indexOf(props.sensor)]
+    dataPointForAllSensors => dataPointForAllSensors[props.sensor]
   );
+
+  console.log(props.dataPoints);
 
   // NOW WE CAN ALSO PLOT UNIT
   // AND WE ALSO NEED TO TAKE IN TIMESTAMPS!!!!!!!!!!

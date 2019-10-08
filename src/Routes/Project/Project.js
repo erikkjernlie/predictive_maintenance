@@ -1,28 +1,21 @@
-import React, { useEffect } from "react";
-import { storage } from "../../firebase";
-import { csv } from "d3";
+import React from "react";
+import { Route, Switch } from "react-router-dom";
+
+import Sensors from "../Sensors/Sensors";
+import ProjectSetup from "./ProjectSetup";
 
 const Project = ({ match }) => {
-  const { projectName } = match.params;
-
-  useEffect(() => {
-    // load project here
-    fetchProject();
-  }, []);
-
-  const fetchProject = () => {
-    const uploadTask = storage.ref(`${projectName}/data.csv`);
-    uploadTask.getDownloadURL().then(url => {
-      console.log(url);
-      csv(url).then(data => {
-        console.log(data);
-      });
-    });
-  };
-
   return (
     <div>
-      Trying to load the data for: <b>{projectName}</b>
+      {" "}
+      <Switch>
+        <Route
+          exact
+          path={`${match.path}`}
+          render={props => <ProjectSetup {...props} />}
+        />
+        <Route path={`${match.path}/sensors`} component={Sensors} />
+      </Switch>
     </div>
   );
 };
