@@ -1,12 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useModels } from "../../stores/models/modelsStore";
 import {
   useSensorNames,
   useDataPoints
 } from "../../stores/sensors/sensorsStore";
-import * as tf from "@tensorflow/tfjs";
 import "./Sensors.css";
 import Sensor from "../../Components/Sensor/Sensor";
+
+import * as tf from "@tensorflow/tfjs";
+import * as tfvis from "@tensorflow/tfjs-vis";
+import * as data from "./data";
 
 const Sensors = props => {
   const models = useModels();
@@ -14,6 +17,63 @@ const Sensors = props => {
   const dataPoints = useDataPoints();
 
   const [currentSensor, setCurrentSensor] = useState("");
+
+  useEffect(() => {
+    train();
+  }, []);
+
+  async function train() {
+    console.log("train model");
+    const [xTrain, yTrain, xTest, yTest] = data.getIrisData(0.15);
+    console.log(xTrain, xTest);
+
+    const model = await trainModel(xTrain, yTrain, xTest, yTest);
+    console.log("PREDICT", model.predict(xTest));
+  }
+
+  async function trainModel(xTrain, yTrain, xTest, yTest) {
+    console.log("Start training");
+    // const params = ui.loadTrainParametersFromUI();
+
+    // Define the topology of the model: two dense layers.
+    const model = tf.sequential();
+    model.add(
+      tf.layers.dense({
+        units: 10,
+        activation: "sigmoid",
+        inputShape: [xTrain.shape[1]]
+      })
+    );
+    model.add(tf.layers.dense({ units: 3, activation: "softmax" }));
+    model.summary();
+
+    // learningrate
+    const learningRate = 0.01;
+    const epochs = 100;
+    const optimizer = tf.train.adam(learningRate);
+    model.compile({
+      optimizer: optimizer,
+      loss: "categoricalCrossentropy",
+      metrics: ["accuracy"]
+    });
+
+    const trainLogs = [];
+    const lossContainer = document.getElementById("lossCanvas");
+    const accContainer = document.getElementById("accuracyCanvas");
+    const callbacks = tfvis.show.fitCallbacks(lossContainer, ["loss", "acc"], {
+      callbacks: ["onEpochEnd"]
+    });
+    const beginMs = performance.now();
+    // Call `model.fit` to train the model.
+    const history = await model.fit(xTrain, yTrain, {
+      epochs: epochs,
+      validationData: [xTest, yTest],
+      callbacks: callbacks
+    });
+    // nconst secPerEpoch = (performance.now() - beginMs) / (1000 * epochs);
+    return model;
+  }
+
   return (
     <div className="Sensors">
       {/*<div>
@@ -28,7 +88,17 @@ const Sensors = props => {
           </div>
         ))}
         </div>*/}
-      <div className="SensorsList">
+      <div>
+        <div>
+          <h4>Loss</h4>
+          <div className="canvases" id="lossCanvas"></div>
+        </div>
+        <div>
+          <h4>Accuracy</h4>
+          <div className="canvases" id="accuracyCanvas"></div>
+        </div>
+      </div>
+      {/*<div className="SensorsList">
         {sensors.map(sensor => (
           <div
             className={currentSensor === sensor ? "SelectedSensor" : ""}
@@ -49,6 +119,7 @@ const Sensors = props => {
           />
         </div>
       )}
+      */}
     </div>
   );
 };
