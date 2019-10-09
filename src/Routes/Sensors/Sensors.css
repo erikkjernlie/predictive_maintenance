@@ -16,7 +16,7 @@
   background: white;
 }
 input {
-  width: 75px;
+  min-width: 75px;
 }
 .input-div {
   padding: 5px;

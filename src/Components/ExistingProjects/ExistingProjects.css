@@ -24,8 +24,6 @@ a {
 }
 
 .ExistingProjects__Projects {
-  max-height: 200px;
-  overflow: auto;
 }
 
 .Content {

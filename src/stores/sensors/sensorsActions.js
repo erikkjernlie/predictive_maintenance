@@ -30,3 +30,22 @@ export function setDatapoints(dataPoints) {
     dataPoints: dataPoints
   });
 }
+
+export function saveSensorData(sensor, type) {
+  let b = sensorsStore.getState().sensorData;
+  console.log(b);
+  if (b["internal"].indexOf(sensor) >= 0) {
+    b["internal"] = b["internal"].filter(s => s !== sensor);
+  }
+  if (b["input"].indexOf(sensor) >= 0) {
+    b["input"] = b["input"].filter(s => s !== sensor);
+  }
+  if (b["output"].indexOf(sensor) >= 0) {
+    b["output"] = b["output"].filter(s => s !== sensor);
+  }
+  b[type] = b[type].concat(sensor);
+  console.log(b);
+  sensorsStore.setState({
+    sensorData: b
+  });
+}

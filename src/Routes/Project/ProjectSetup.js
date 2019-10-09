@@ -30,11 +30,6 @@ const ProjectSetup = ({ match }) => {
       });
     });
   };
-  /*
-      Trying to load the data for: <b>{projectName}</b>
-
-     
-  */
 
   return (
     <div>

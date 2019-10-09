@@ -28,16 +28,23 @@ const App = () => {
   return (
     <div className="App">
       {/* DO WE NEED HISTORY IN ROUTER? */}
+
       <Router history={history}>
         <Navbar />
+
         <Switch>
           <Route
             exact
+            path="/projects"
+            render={props => <Dashboard {...props} />}
+          />
+          <Route path="/newProject" render={props => <Upload {...props} />} />
+
+          <Route
             path={`/dashboard`}
             render={props => <Dashboard {...props} />}
           />
           <Route path="/sensors" render={props => <Sensors {...props} />} />
-          <Route exact path="/" render={props => <Upload {...props} />} />
           <Route
             path={`/:projectName`}
             render={props => <Project {...props} />}

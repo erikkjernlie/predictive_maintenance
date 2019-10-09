@@ -4,6 +4,10 @@ import { Link, Redirect } from "react-router-dom";
 import ExistingProjects from "../ExistingProjects/ExistingProjects";
 import "./Upload.css";
 import { setTimeout } from "timers";
+import { csv } from "d3";
+import CSVReader from "react-csv-reader";
+import AddSensor from "../Sensor/AddSensor";
+import { useSensorData } from "../../stores/sensors/sensorsStore";
 
 class Upload extends Component {
   constructor(props) {
@@ -18,7 +22,9 @@ class Upload extends Component {
       uploadWeights: false,
       file1: null,
       file2: null,
-      uploading: false
+      uploading: false,
+      selectedDataset: false,
+      sensorNames: []
     };
   }
 
@@ -26,6 +32,31 @@ class Upload extends Component {
     if (e.target.value) {
       this.setState({
         projectName: e.target.value
+      });
+    }
+  };
+
+  loadData = data => {
+    console.log(data);
+  };
+
+  startTraining = () => {
+    console.log("start training");
+  };
+
+  selectDataset = () => {
+    console.log(this.state.file);
+    if (this.state.file !== null) {
+      this.setState({
+        selectedDataset: true
+      });
+      console.log(this.state.file);
+      csv(this.state.file.name).then(data => {
+        let sensorNames = Object.keys(data[0]);
+        console.log(sensorNames);
+        this.setState({
+          sensorNames
+        });
       });
     }
   };
@@ -187,8 +218,7 @@ class Upload extends Component {
   render() {
     return (
       <div className="Container">
-        <ExistingProjects />
-        <div className="NewProject">or create new project</div>
+        <div className="NewProject">Create new project</div>
         <div className="Project">
           <div className="Option">Option 1: Upload dataset (.csv)</div>
           <div className="ProjectName">
@@ -200,8 +230,38 @@ class Upload extends Component {
           )}
           <br />
           <input type="file" onChange={this.handleChange} />
-          <button onClick={this.handleUpload}>Upload</button>
+          <button onClick={() => this.selectDataset()}>Load dataset</button>
+          <React.Fragment>
+            <div className="NewProject__description">
+              Choose values for sensors
+            </div>
+            <table>
+              <tbody>
+                <tr>
+                  <th>Sensor </th>
+                  <th>Input</th>
+                  <th>output</th>
+                  <th>internal sensor</th>
+                  <th>Unit</th>
+                </tr>
+                {this.state.sensorNames &&
+                  this.state.sensorNames.map(sensor => (
+                    <AddSensor key={sensor} sensor={sensor} />
+                  ))}
+              </tbody>
+            </table>
+            <button onClick={() => this.startTraining()}>
+              Continue to train model
+            </button>
+          </React.Fragment>
+          {/*<button onClick={this.handleUpload}>Upload</button>*/}
         </div>
+        {/*<CSVReader
+          cssClass="react-csv-input"
+          label=""
+          onFileLoaded={this.loadData}
+        />*/}
+        {/*
         <div className="Project">
           <div className="Option">
             Option 2: Upload predefined model with weigths (two files)
@@ -215,6 +275,7 @@ class Upload extends Component {
           <input type="file" onChange={this.handleChangeMultiple} multiple />
           <button onClick={this.handleUploadMultiple}>Upload</button>
         </div>
+          */}
       </div>
     );
   }

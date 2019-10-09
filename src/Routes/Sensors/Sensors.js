@@ -7,6 +7,8 @@ import {
 import "./Sensors.css";
 import Sensor from "../../Components/Sensor/Sensor";
 
+import { csv } from "d3";
+
 import * as tf from "@tensorflow/tfjs";
 import * as tfvis from "@tensorflow/tfjs-vis";
 import * as data from "./data";
@@ -14,12 +16,27 @@ import * as data from "./data";
 const Sensors = props => {
   const models = useModels();
   const sensors = useSensorNames();
-  const dataPoints = useDataPoints();
+  // const dataPoints = useDataPoints();
 
-  const [currentSensor, setCurrentSensor] = useState("");
+  const [sensorNames, setSensorNames] = useState([]);
+  const [dataPoints, setDatapoints] = useState([]);
 
   useEffect(() => {
-    train();
+    csv("/rig_good.csv").then(data => {
+      let sensorNames = Object.keys(data[0]);
+      console.log(sensorNames);
+      let dataPoints = data.slice(1);
+      setSensorNames(sensorNames);
+      setDatapoints(dataPoints);
+      console.log(dataPoints);
+      train();
+    });
+
+    const dataset = tf.data.csv(
+      "https://firebasestorage.googleapis.com/v0/b/tpk4450-project.appspot.com/o/rig_good.csv?alt=media&token=9792ce1c-7196-4a0d-80c2-f83ad35d7744"
+    );
+    const dataset2 = tf.data.csv("./rig_good.csv");
+    console.log("TF DATA", dataset2);
   }, []);
 
   async function train() {

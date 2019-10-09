@@ -1,7 +1,8 @@
 import React from "react";
+import ExistingProjects from "../../Components/ExistingProjects/ExistingProjects";
 
 const Dashboard = props => {
-  return <div>hey</div>;
+  return <ExistingProjects />;
 };
 
 export default Dashboard;

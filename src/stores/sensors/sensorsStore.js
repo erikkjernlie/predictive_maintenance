@@ -6,7 +6,12 @@ const store = createStore({
   fetching: false,
   data: [],
   sensorNames: [],
-  dataPoints: []
+  dataPoints: [],
+  sensorData: {
+    input: [],
+    output: [],
+    internal: []
+  }
 });
 
 export function useSensors() {
@@ -29,6 +34,11 @@ export function useSensorNames() {
 export function useDataPoints() {
   const { dataPoints } = useStoreState(store);
   return dataPoints;
+}
+
+export function useSensorData() {
+  const { sensorData } = useStoreState(store);
+  return sensorData;
 }
 
 export default store;

@@ -1,6 +1,19 @@
 .NavbarWrapper {
   width: 70px;
-  background: grey;
+  background: #292929;
   height: 100%;
   min-height: 100vh;
+  color: white;
+}
+
+.Selected {
+  background: #2963f6;
+}
+
+.NavElement {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 0px;
 }

@@ -12,7 +12,7 @@ const ExistingProjects = () => (
             .getItem("projects")
             .split(" ")
             .map(project => (
-              <div className="Link">
+              <div className="Link" key={project}>
                 <Link to={project}>{project}</Link>
               </div>
             ))}
