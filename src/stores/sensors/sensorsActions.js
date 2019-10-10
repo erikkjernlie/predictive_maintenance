@@ -31,6 +31,12 @@ export function setDatapoints(dataPoints) {
   });
 }
 
+export function setProjectName(projectName) {
+  sensorsStore.setState({
+    projectName: projectName
+  });
+}
+
 export function saveSensorData(sensor, type) {
   let b = sensorsStore.getState().sensorData;
   console.log(b);

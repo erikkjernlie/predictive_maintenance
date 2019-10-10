@@ -8,6 +8,8 @@ import { csv } from "d3";
 import CSVReader from "react-csv-reader";
 import AddSensor from "../Sensor/AddSensor";
 import { useSensorData } from "../../stores/sensors/sensorsStore";
+import { setDatapoints, setSensors } from "../../stores/sensors/sensorsActions";
+import { min } from "simple-statistics";
 
 const Upload = props => {
   const [file, setFile] = useState(null);
@@ -46,8 +48,12 @@ const Upload = props => {
       console.log(file);
       csv(file.name).then(data => {
         let sensorNames = Object.keys(data[0]);
+        setDatapoints(data);
         console.log(sensorNames);
         setSensorNames(sensorNames);
+        setSensors(sensorNames);
+        setProjectName(projectName);
+        console.log("MIN", min(data.map(point => point["Load"])));
       });
     }
   };
@@ -91,8 +97,6 @@ const Upload = props => {
       },
       () => {
         // complete function ....
-        // CONTINUE HERE
-        // NEED TO BE ABLE TO SAVE TO JSON FILE SOMEHOW
 
         const fileData = JSON.stringify(sensorData);
         const blob = new Blob([fileData], { type: "text/plain" });
@@ -128,7 +132,7 @@ const Upload = props => {
               }
             }
             setTimeout(() => {
-              props.history.push(projectName);
+              props.history.push(projectName + "/configuration");
             }, 500);
           }
         );

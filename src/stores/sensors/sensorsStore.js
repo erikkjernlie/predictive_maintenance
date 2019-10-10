@@ -11,12 +11,18 @@ const store = createStore({
     input: [],
     output: [],
     internal: []
-  }
+  },
+  projectName: ""
 });
 
 export function useSensors() {
   const { sensors } = useStoreState(store);
   return sensors;
+}
+
+export function useProjectName() {
+  const { projectName } = useStoreState(store);
+  return projectName;
 }
 
 export function useData() {

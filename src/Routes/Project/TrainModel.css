@@ -1,0 +1,82 @@
+.Sensors {
+  display: flex;
+}
+
+.SensorsList {
+  width: 150px;
+  background: lightgrey;
+}
+
+.CurrentSensor {
+  background: white;
+  margin-left: 30px;
+}
+
+.SelectedSensor {
+  background: white;
+}
+input {
+  min-width: 75px;
+}
+.input-div {
+  padding: 5px;
+  font-family: monospace;
+  font-size: 16px;
+}
+.input-label {
+  display: inline-block;
+  width: 160px;
+}
+td {
+  padding-left: 5px;
+  padding-right: 5px;
+  padding-bottom: 5px;
+}
+#predict-header {
+  font-weight: bold;
+}
+.output-div {
+  padding: 5px;
+  padding-top: 20px;
+  font-family: monospace;
+  font-weight: bold;
+}
+#evaluate-table {
+  display: inline-block;
+}
+#evaluate-table td,
+#evaluate-table th {
+  font-family: monospace;
+  border: 1px solid #ddd;
+  padding: 8px;
+}
+#evaluate-table th {
+  padding-top: 12px;
+  padding-bottom: 12px;
+  text-align: left;
+  background-color: #4caf50;
+  color: white;
+}
+.region {
+  border-left: 1px dashed #ccc;
+  margin-bottom: 5px;
+  padding-left: 24px;
+  margin-left: -24px;
+}
+.load-save-section {
+  padding-top: 3px;
+  padding-bottom: 3px;
+}
+.logit-span {
+  padding-right: 1em;
+}
+.correct-prediction {
+  background-color: greenyellow;
+}
+.wrong-prediction {
+  background-color: red;
+}
+
+.canvases {
+  min-width: 500px;
+}

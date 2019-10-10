@@ -4,6 +4,7 @@ import CSVReader from "react-csv-reader";
 import AddSensor from "../../Components/Sensor/AddSensor";
 import { setSensors, setDatapoints } from "../../stores/sensors/sensorsActions";
 import { Link } from "react-router-dom";
+import { min } from "simple-statistics";
 
 import "./NewProject.css";
 

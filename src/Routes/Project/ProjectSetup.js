@@ -1,7 +1,11 @@
 import React, { useEffect, useState } from "react";
 
 import { storage } from "../../firebase";
-import { setSensors, setDatapoints } from "../../stores/sensors/sensorsActions";
+import {
+  setSensors,
+  setDatapoints,
+  setProjectName
+} from "../../stores/sensors/sensorsActions";
 import { Link } from "react-router-dom";
 
 import { csv } from "d3";
@@ -23,10 +27,10 @@ const ProjectSetup = ({ match }) => {
       csv(url).then(data => {
         let sensorNames = Object.keys(data[0]);
         console.log(sensorNames);
-        let dataPoints = data.slice(1);
         setSensorNames(sensorNames);
         setSensors(sensorNames);
-        setDatapoints(dataPoints);
+        setDatapoints(data);
+        setProjectName(projectName);
       });
     });
   };
