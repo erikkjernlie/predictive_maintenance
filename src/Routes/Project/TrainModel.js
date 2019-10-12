@@ -26,7 +26,7 @@ const TrainModel = ({ match }) => {
   const [dataPoints, setDatapoints] = useState([]);
 
   useEffect(() => {
-    csv("/rig_good.csv").then(data => {
+    csv("/iris_mod_extended.csv").then(data => {
       let sensorNames = Object.keys(data[0]);
       setSensorNames(sensorNames);
       setDatapoints(data);
@@ -43,9 +43,69 @@ const TrainModel = ({ match }) => {
     */
   }, []);
 
+  function getRSquared(predict, data) {
+    console.log("Inside getRSquared function")
+    console.log(predict)
+    console.log(data)
+    var yAxis = data.map(x => Number(x));
+    predict = predict.map(x => Number(x))
+    var rPrediction = [];
+
+    var meanValue = 0; // MEAN VALUE
+    var SStot = 0; // THE TOTAL SUM OF THE SQUARES
+    var SSres = 0; // RESIDUAL SUM OF SQUARES
+    var rSquared = 0;
+
+    // SUM ALL VALUES
+    for (var n = 0; n < yAxis.length; n++) { 
+      meanValue += yAxis[n];
+    }
+    // GET MEAN VALUE 
+    meanValue = (meanValue / yAxis.length);
+    
+    for (var n = 0; n < yAxis.length; n++) {
+      // CALCULATE THE SSTOTAL    
+      SStot += Math.pow(yAxis[n] - meanValue, 2); 
+      // REGRESSION PREDICTION
+      rPrediction.push(predict[n]);
+      // CALCULATE THE SSRES
+      SSres += Math.pow(rPrediction[n] - yAxis[n], 2);
+    }
+
+    // R SQUARED
+    rSquared = 1 - (SSres / SStot);
+    
+    return {
+        meanValue: meanValue,
+        SStot: SStot,
+        SSres: SSres,
+        rSquared: rSquared
+    };
+  }
+
+  function shuffle(array) {
+    var currentIndex = array.length, temporaryValue, randomIndex;
+  
+    // While there remain elements to shuffle...
+    while (0 !== currentIndex) {
+  
+      // Pick a remaining element...
+      randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex -= 1;
+  
+      // And swap it with the current element.
+      temporaryValue = array[currentIndex];
+      array[currentIndex] = array[randomIndex];
+      array[randomIndex] = temporaryValue;
+    }
+  
+    return array;
+  }
+
   async function train(data) {
     console.log(data);
-    const dataset = data.map(x => Object.values(x).map(Number));
+    let dataset = data.map(x => Object.values(x).map(Number));
+    dataset = shuffle(dataset)
 
     // const [xTrain, yTrain, xTest, yTest] = getProcessedData(dataset, 0.15);
     const numberOfColumns = Object.keys(data[0]).length;
@@ -82,10 +142,13 @@ const TrainModel = ({ match }) => {
       tensors.testFeatures,
       tensors.testTargets
     );
-    console.log("PREDICT", model.predict(tensors.trainFeatures));
+    const predictions = model.predict(tensors.testFeatures)
+    console.log("PREDICT", predictions);
+    console.log("R2 score: ", getRSquared(predictions.arraySync(), y_test))
   }
 
   async function trainModel(xTrain, yTrain, xTest, yTest) {
+
     console.log("Start training");
     // const params = ui.loadTrainParametersFromUI();
 
@@ -134,7 +197,7 @@ const TrainModel = ({ match }) => {
     // 1261.0421142578125,27.090818405151367,4.955190658569336
 
     model
-      .predict(tf.tensor2d([[1261.0421142578125, 27.090818405151367]], [1, 2]))
+      .predict(tf.tensor2d([[1.0, 4.0, 2.0]], [1, 3]))
       .print();
 
     // SAVE MODEL TO FIRESTORE AND TO STORE IN APPLICATION SO IT CAN PREDICT ELSEWHERE
