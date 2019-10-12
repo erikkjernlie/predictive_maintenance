@@ -16,6 +16,7 @@ import {
   mean,
   standardDeviation,
   sampleStandardDeviation,
+  sampleCorrelation
 } from 'simple-statistics'
 
 import { csv } from "d3";
@@ -140,13 +141,13 @@ const TrainModel = ({ match }) => {
     return normalized
   }
 
-  function standardizeData(data) {
-    const numberOfColumns = data[0].length
-    const numberOfRows = data.length
+  function standardizeData(dataset) {
+    const numberOfColumns = dataset[0].length
+    const numberOfRows = dataset.length
     let meanvals = []
     let stdvals = []
     for (var i = 0; i < numberOfColumns; i++) {
-      const col = data.map(x => x[i])
+      const col = dataset.map(x => x[i])
       meanvals.push(mean(col))
       stdvals.push(standardDeviation(col))
     }
@@ -154,11 +155,36 @@ const TrainModel = ({ match }) => {
     for (var i = 0; i < numberOfRows; i++) {
       const row = []
       for (var j = 0; j < numberOfColumns; j++) {
-        row.push((data[i][j] - meanvals[j])/(stdvals[j]))
+        row.push((dataset[i][j] - meanvals[j])/(stdvals[j]))
       }
       standardized.push(row)
     }
     return standardized
+  }
+
+  function getDatasetByColumns(dataset) {
+    const numberOfColumns = dataset[0].length
+    const numberOfRows = dataset.length
+    const columnsData = []
+    for (var i = 0; i < numberOfColumns; i++) {
+      const column = dataset.map(x => x[i])
+      columnsData.push(column)
+    }
+    return columnsData
+  }
+
+  function getCovarianceMatrix(dataset) {
+    const columnData = getDatasetByColumns(dataset)
+    const numberOfColumns = columnData.length
+    const covariances = []
+    for (var i = 0; i < numberOfColumns; i++) {
+      const covariances_column_i = []
+      for (var j = 0; j < numberOfColumns; j++) {
+        covariances_column_i.push(sampleCorrelation(columnData[i], columnData[j]))
+      }
+      covariances.push(covariances_column_i)
+    }
+    return covariances
   }
 
   async function train(data) {
@@ -166,6 +192,7 @@ const TrainModel = ({ match }) => {
     let dataset = data.map(x => Object.values(x).map(Number));
     dataset = shuffle(dataset)
     const test_train_split = 0.2;
+    console.log("Covariance matrix", getCovarianceMatrix(dataset))
     const [features, targets] = getFeatureTargetSplit(dataset)
     const normalizedFeatures = normalizeData(features)
     const standardizedFeatures = standardizeData(features)
