@@ -187,12 +187,27 @@ const TrainModel = ({ match }) => {
     return covariances
   }
 
+  function discardCovariantColumns(dataset) {
+    const cov = getCovarianceMatrix(dataset)
+    for (var i = 0; i < dataset[0].length; i++) {
+      for (var j = i+1; j < dataset[0].length; j++) {
+        if (cov[i][j] > 0.95) {
+          dataset = dataset.map(x => x.splice(i))
+          break
+        }
+      }
+    }
+    console.log("Data after discarding column", dataset)
+    return dataset
+  }
+
   async function train(data) {
-    console.log(data);
     let dataset = data.map(x => Object.values(x).map(Number));
     dataset = shuffle(dataset)
     const test_train_split = 0.2;
+    console.log("Data before discarding column", dataset)
     console.log("Covariance matrix", getCovarianceMatrix(dataset))
+    dataset = discardCovariantColumns(dataset)
     const [features, targets] = getFeatureTargetSplit(dataset)
     const normalizedFeatures = normalizeData(features)
     const standardizedFeatures = standardizeData(features)
@@ -263,9 +278,9 @@ const TrainModel = ({ match }) => {
 
     // 1261.0421142578125,27.090818405151367,4.955190658569336
 
-    model
-      .predict(tf.tensor2d([[1.0, 4.0, 2.0]], [1, 3]))
-      .print();
+    //model
+      //.predict(tf.tensor2d([[1.0, 4.0, 2.0]], [1, 3]))
+      //.print();
 
     // SAVE MODEL TO FIRESTORE AND TO STORE IN APPLICATION SO IT CAN PREDICT ELSEWHERE
 
