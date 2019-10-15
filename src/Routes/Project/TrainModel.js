@@ -17,7 +17,7 @@ import {
   standardDeviation,
   sampleStandardDeviation,
   sampleCorrelation
-} from 'simple-statistics'
+} from "simple-statistics";
 
 import { csv } from "d3";
 
@@ -33,6 +33,7 @@ import {
   getDatasetByColumns,
   discardCovariantColumns
 } from "./statisticsLib.js";
+import { storage } from "../../firebase";
 
 const TrainModel = ({ match }) => {
   const models = useModels();
@@ -64,10 +65,10 @@ const TrainModel = ({ match }) => {
 
   function getFeatureTargetSplit(dataset) {
     const numberOfColumns = Object.keys(dataset[0]).length;
-    
+
     const features = dataset.map(x => x.slice(0, numberOfColumns - 1));
     const targets = dataset.map(x => x.slice(numberOfColumns - 1));
-    return [features, targets]
+    return [features, targets];
   }
 
   function getTestTrainSplit(features, targets, test_train_split) {
@@ -79,7 +80,7 @@ const TrainModel = ({ match }) => {
     const x_test = features.slice(numberOfTrain - 1);
     const y_train = targets.slice(0, numberOfTrain - 1);
     const y_test = targets.slice(numberOfTrain - 1);
-    return [x_train, x_test, y_train, y_test]
+    return [x_train, x_test, y_train, y_test];
   }
 
   function convertToTensors(x_train, x_test, y_train, y_test) {
@@ -88,12 +89,12 @@ const TrainModel = ({ match }) => {
     tensors.trainTargets = tf.tensor2d(y_train);
     tensors.testFeatures = tf.tensor2d(x_test);
     tensors.testTargets = tf.tensor2d(y_test);
-    return tensors
+    return tensors;
   }
 
   async function train(data) {
     let dataset = data.map(x => Object.values(x).map(Number));
-    dataset = shuffle(dataset)
+    dataset = shuffle(dataset);
     const test_train_split = 0.2;
     console.log("Data before discarding column", dataset)
     console.log("Covariance matrix", getCovarianceMatrix(dataset))
@@ -103,24 +104,23 @@ const TrainModel = ({ match }) => {
     const standardizedFeatures = standardizeData(features)
     const [x_train, x_test, y_train, y_test] = getTestTrainSplit(standardizedFeatures, targets, test_train_split)
     const tensors = convertToTensors(x_train, x_test, y_train, y_test);
-    console.log("x train", x_train)
-    console.log("x test", x_test)
-    console.log("y train", y_train)
-    console.log("y test", y_test)
-    
+    console.log("x train", x_train);
+    console.log("x test", x_test);
+    console.log("y train", y_train);
+    console.log("y test", y_test);
+
     const model = await trainModel(
       tensors.trainFeatures,
       tensors.trainTargets,
       tensors.testFeatures,
       tensors.testTargets
     );
-    const predictions = model.predict(tensors.testFeatures)
+    const predictions = model.predict(tensors.testFeatures);
     console.log("PREDICT", predictions);
-    console.log("R2 score: ", getR2Score(predictions.arraySync(), y_test))
+    console.log("R2 score: ", getR2Score(predictions.arraySync(), y_test));
   }
 
   async function trainModel(xTrain, yTrain, xTest, yTest) {
-
     console.log("Start training");
     // const params = ui.loadTrainParametersFromUI();
 
@@ -144,7 +144,7 @@ const TrainModel = ({ match }) => {
 
     // learningrate
     const learningRate = 0.01;
-    const epochs = 20;
+    const epochs = 2;
     const optimizer = tf.train.adam(learningRate);
     model.compile({
       optimizer: optimizer,
@@ -168,9 +168,16 @@ const TrainModel = ({ match }) => {
 
     // 1261.0421142578125,27.090818405151367,4.955190658569336
 
+    /*model
+      .predict(tf.tensor2d([[1261.0421142578125, 27.090818405151367]], [1, 2]))
+      .print();*/
+
+    const blob = new Blob([model], { type: "multipart/form-data" });
+
+    const uploadTask2 = storage.ref(`${projectName}/`).put(blob);
     //model
-      //.predict(tf.tensor2d([[1.0, 4.0, 2.0]], [1, 3]))
-      //.print();
+    //.predict(tf.tensor2d([[1.0, 4.0, 2.0]], [1, 3]))
+    //.print();
 
     // SAVE MODEL TO FIRESTORE AND TO STORE IN APPLICATION SO IT CAN PREDICT ELSEWHERE
 

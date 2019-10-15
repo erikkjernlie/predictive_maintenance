@@ -10,9 +10,11 @@ const store = createStore({
   sensorData: {
     input: [],
     output: [],
-    internal: []
-  },
-  projectName: ""
+    internal: [],
+    sensors: [],
+    projectName: "",
+    URLtoLiveFeed: ""
+  }
 });
 
 export function useSensors() {
@@ -21,7 +23,8 @@ export function useSensors() {
 }
 
 export function useProjectName() {
-  const { projectName } = useStoreState(store);
+  const { sensorData } = useStoreState(store);
+  const { projectName } = sensorData;
   return projectName;
 }
 

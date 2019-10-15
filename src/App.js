@@ -4,13 +4,11 @@ import Navbar from "./shared/Navbar/Navbar";
 import Dashboard from "./Routes/Dashboard/Dashboard";
 import Sensors from "./Routes/Sensors/Sensors";
 import Upload from "./Components/Upload/Upload";
-import NewProject from "./Routes/NewProject/NewProject";
 import Project from "./Routes/Project/Project";
 import { createBrowserHistory } from "history";
 import { fetchModels } from "./stores/models/modelsActions";
 // import { fetchSensors } from "./stores/sensors/sensorsActions";
 
-import logo from "./logo.svg";
 import "./App.css";
 
 const App = () => {

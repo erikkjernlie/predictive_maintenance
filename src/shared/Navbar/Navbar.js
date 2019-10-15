@@ -1,17 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import "./Navbar.css";
 import { Link } from "react-router-dom";
-import messages from "../../messages";
 
 const Navbar = props => {
   const [selectedPage, setSelectedPage] = useState("Logo");
-
-  const handleClick = page => {
-    if (selectedPage === page) {
-      return;
-    }
-    setSelectedPage(page);
-  };
 
   return (
     <div className="NavbarWrapper">
@@ -25,14 +17,14 @@ const Navbar = props => {
         }
       >
         <Link to="/newProject">
-          <img src="add.svg" color="white" />
+          <img src="add.svg" color="white" alt="add" />
         </Link>
       </div>
       <div
         className={"NavElement " + (selectedPage === "/projects" && "Selected")}
       >
         <Link to="/projects">
-          <img src="list.svg" color="white" />
+          <img src="list.svg" color="white" alt="list" />
         </Link>
       </div>
     </div>

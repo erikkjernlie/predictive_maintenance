@@ -2,7 +2,6 @@ import React from "react";
 import { Route, Switch } from "react-router-dom";
 
 import Sensors from "../Sensors/Sensors";
-import ProjectSetup from "./ProjectSetup";
 import MyProject from "./MyProject";
 import TrainModel from "./TrainModel";
 

@@ -1,30 +1,31 @@
-import React, { Component, useState } from "react";
+import React, { useState } from "react";
 import { storage } from "../../firebase";
-import { Link, Redirect } from "react-router-dom";
-import ExistingProjects from "../ExistingProjects/ExistingProjects";
 import "./Upload.css";
 import { setTimeout } from "timers";
 import { csv } from "d3";
-import CSVReader from "react-csv-reader";
 import AddSensor from "../Sensor/AddSensor";
-import { useSensorData } from "../../stores/sensors/sensorsStore";
-import { setDatapoints, setSensors } from "../../stores/sensors/sensorsActions";
+import {
+  useSensorData,
+  useProjectName
+} from "../../stores/sensors/sensorsStore";
+import {
+  setDatapoints,
+  setSensors,
+  setLiveFeedURL,
+  setProjectName
+} from "../../stores/sensors/sensorsActions";
 import { min } from "simple-statistics";
 
 const Upload = props => {
   const [file, setFile] = useState(null);
-  const [url, setUrl] = useState("");
   const [progress, setProgress] = useState(0);
-  const [projectName, setProjectName] = useState("");
-  const [file1, setFile1] = useState(null);
-
-  const [file2, setFile2] = useState(null);
 
   const [uploading, setUploading] = useState(false);
-  const [selectedDataset, setSelectedDataset] = useState(false);
   const [sensorNames, setSensorNames] = useState([]);
 
   const sensorData = useSensorData();
+
+  const projectName = useProjectName();
 
   const handleProjectName = e => {
     if (e.target.value) {
@@ -32,8 +33,10 @@ const Upload = props => {
     }
   };
 
-  const loadData = data => {
-    console.log(data);
+  const handleURL = e => {
+    if (e.target.value) {
+      setLiveFeedURL(e.target.value);
+    }
   };
 
   const startTraining = () => {
@@ -44,7 +47,6 @@ const Upload = props => {
   const selectDataset = () => {
     console.log(file);
     if (file !== null) {
-      setSelectedDataset(true);
       console.log(file);
       csv(file.name).then(data => {
         let sensorNames = Object.keys(data[0]);
@@ -82,6 +84,8 @@ const Upload = props => {
       return;
     }
     setUploading(true);
+    const fileData = JSON.stringify(sensorData);
+    console.log("HERE COMES THE FILEDATA", fileData);
     const uploadTask = storage.ref(`${projectName}/data.csv`).put(file);
     // observer for when the state changes, e.g. progress
     uploadTask.on(
@@ -98,7 +102,6 @@ const Upload = props => {
       () => {
         // complete function ....
 
-        const fileData = JSON.stringify(sensorData);
         const blob = new Blob([fileData], { type: "text/plain" });
 
         const uploadTask2 = storage
@@ -150,6 +153,8 @@ const Upload = props => {
           Choose a name for the project and upload dataset (.csv)
         </div>
         <input onChange={handleProjectName} />
+        <div className="ProjectName">Set a URL for livefeedData</div>
+        <input onChange={handleURL} />
         {uploading && file && <progress value={progress} max="100" />}
         <br />
         <input type="file" onChange={handleChange} />
