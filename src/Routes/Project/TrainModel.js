@@ -96,18 +96,22 @@ const TrainModel = ({ match }) => {
     let dataset = data.map(x => Object.values(x).map(Number));
     dataset = shuffle(dataset);
     const test_train_split = 0.2;
-    console.log("Data before discarding column", dataset)
-    console.log("Covariance matrix", getCovarianceMatrix(dataset))
-    dataset = discardCovariantColumns(dataset, getCovarianceMatrix(dataset))
-    const [features, targets] = getFeatureTargetSplit(dataset)
-    const normalizedFeatures = normalizeData(features)
-    const standardizedFeatures = standardizeData(features)
-    const [x_train, x_test, y_train, y_test] = getTestTrainSplit(standardizedFeatures, targets, test_train_split)
+    //console.log("Data before discarding column", dataset);
+    //console.log("Covariance matrix", getCovarianceMatrix(dataset));
+    dataset = discardCovariantColumns(dataset, getCovarianceMatrix(dataset));
+    const [features, targets] = getFeatureTargetSplit(dataset);
+    const normalizedFeatures = normalizeData(features);
+    const standardizedFeatures = standardizeData(features);
+    const [x_train, x_test, y_train, y_test] = getTestTrainSplit(
+      standardizedFeatures,
+      targets,
+      test_train_split
+    );
     const tensors = convertToTensors(x_train, x_test, y_train, y_test);
-    console.log("x train", x_train);
-    console.log("x test", x_test);
-    console.log("y train", y_train);
-    console.log("y test", y_test);
+    //console.log("x train", x_train);
+    //console.log("x test", x_test);
+    //console.log("y train", y_train);
+    //console.log("y test", y_test);
 
     const model = await trainModel(
       tensors.trainFeatures,
@@ -116,12 +120,12 @@ const TrainModel = ({ match }) => {
       tensors.testTargets
     );
     const predictions = model.predict(tensors.testFeatures);
-    console.log("PREDICT", predictions);
-    console.log("R2 score: ", getR2Score(predictions.arraySync(), y_test));
+    //console.log("PREDICT", predictions);
+    //console.log("R2 score: ", getR2Score(predictions.arraySync(), y_test));
   }
 
   async function trainModel(xTrain, yTrain, xTest, yTest) {
-    console.log("Start training");
+    // console.log("Start training");
     // const params = ui.loadTrainParametersFromUI();
 
     // Define the topology of the model: two dense layers.
@@ -172,9 +176,26 @@ const TrainModel = ({ match }) => {
       .predict(tf.tensor2d([[1261.0421142578125, 27.090818405151367]], [1, 2]))
       .print();*/
 
+    console.log("START UPLOADING");
+
+    /*
     const blob = new Blob([model], { type: "multipart/form-data" });
 
-    const uploadTask2 = storage.ref(`${projectName}/`).put(blob);
+    const ref = storage.ref(`${projectName}/model/`);
+    const uploadTask2 = storage
+      .ref(`${projectName}`)
+      .put(blob)
+      .then(() => {
+        console.log("UPLOADED");
+      });
+      */
+
+    // await model.save(ref.bucket + "/" + ref.fullPath);
+    await model.save("indexeddb://" + projectName + "/model").then(() => {
+      // model saved in indexeddb
+      // can easily be loaded again
+    });
+
     //model
     //.predict(tf.tensor2d([[1.0, 4.0, 2.0]], [1, 3]))
     //.print();
