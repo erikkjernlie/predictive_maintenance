@@ -25,6 +25,14 @@ import * as tf from "@tensorflow/tfjs";
 import * as tfvis from "@tensorflow/tfjs-vis";
 import * as data from "./data";
 import getProcessedData from "./processData";
+import {
+  getR2Score,
+  normalizeData,
+  standardizeData,
+  getCovarianceMatrix,
+  getDatasetByColumns,
+  discardCovariantColumns
+} from "./statisticsLib.js";
 import { storage } from "../../firebase";
 
 const TrainModel = ({ match }) => {
@@ -55,43 +63,6 @@ const TrainModel = ({ match }) => {
     */
   }, []);
 
-  function getR2Score(predict, data) {
-    console.log("Inside getRSquared function");
-    console.log(predict);
-    console.log(data);
-    data = data.map(x => Number(x));
-    predict = predict.map(x => Number(x));
-
-    var meanValue = 0; // MEAN VALUE
-    var SStot = 0; // THE TOTAL SUM OF THE SQUARES
-    var SSres = 0; // RESIDUAL SUM OF SQUARES
-    var rSquared = 0;
-
-    // SUM ALL VALUES
-    for (var n = 0; n < data.length; n++) {
-      meanValue += data[n];
-    }
-    // GET MEAN VALUE
-    meanValue = meanValue / data.length;
-
-    for (var n = 0; n < data.length; n++) {
-      // CALCULATE THE SSTOTAL
-      SStot += Math.pow(data[n] - meanValue, 2);
-      // CALCULATE THE SSRES
-      SSres += Math.pow(predict[n] - data[n], 2);
-    }
-
-    // R SQUARED
-    rSquared = 1 - SSres / SStot;
-
-    return {
-      meanValue: meanValue,
-      SStot: SStot,
-      SSres: SSres,
-      rSquared: rSquared
-    };
-  }
-
   function getFeatureTargetSplit(dataset) {
     const numberOfColumns = Object.keys(dataset[0]).length;
 
@@ -121,104 +92,17 @@ const TrainModel = ({ match }) => {
     return tensors;
   }
 
-  function normalizeData(data) {
-    const numberOfColumns = data[0].length;
-    const numberOfRows = data.length;
-    let maxvals = [];
-    let minvals = [];
-    for (var i = 0; i < numberOfColumns; i++) {
-      const col = data.map(x => x[i]);
-      maxvals.push(max(col));
-      minvals.push(min(col));
-    }
-    const normalized = [];
-    for (var i = 0; i < numberOfRows; i++) {
-      const row = [];
-      for (var j = 0; j < numberOfColumns; j++) {
-        row.push((data[i][j] - minvals[j]) / (maxvals[j] - minvals[j]));
-      }
-      normalized.push(row);
-    }
-    return normalized;
-  }
-
-  function standardizeData(dataset) {
-    const numberOfColumns = dataset[0].length;
-    const numberOfRows = dataset.length;
-    let meanvals = [];
-    let stdvals = [];
-    for (var i = 0; i < numberOfColumns; i++) {
-      const col = dataset.map(x => x[i]);
-      meanvals.push(mean(col));
-      stdvals.push(standardDeviation(col));
-    }
-    const standardized = [];
-    for (var i = 0; i < numberOfRows; i++) {
-      const row = [];
-      for (var j = 0; j < numberOfColumns; j++) {
-        row.push((dataset[i][j] - meanvals[j]) / stdvals[j]);
-      }
-      standardized.push(row);
-    }
-    return standardized;
-  }
-
-  function getDatasetByColumns(dataset) {
-    const numberOfColumns = dataset[0].length;
-    const numberOfRows = dataset.length;
-    const columnsData = [];
-    for (var i = 0; i < numberOfColumns; i++) {
-      const column = dataset.map(x => x[i]);
-      columnsData.push(column);
-    }
-    return columnsData;
-  }
-
-  function getCovarianceMatrix(dataset) {
-    const columnData = getDatasetByColumns(dataset);
-    const numberOfColumns = columnData.length;
-    const covariances = [];
-    for (var i = 0; i < numberOfColumns; i++) {
-      const covariances_column_i = [];
-      for (var j = 0; j < numberOfColumns; j++) {
-        covariances_column_i.push(
-          sampleCorrelation(columnData[i], columnData[j])
-        );
-      }
-      covariances.push(covariances_column_i);
-    }
-    return covariances;
-  }
-
-  function discardCovariantColumns(dataset) {
-    const cov = getCovarianceMatrix(dataset);
-    for (var i = 0; i < dataset[0].length; i++) {
-      for (var j = i + 1; j < dataset[0].length; j++) {
-        if (cov[i][j] > 0.95) {
-          dataset = dataset.map(x => x.splice(i));
-          break;
-        }
-      }
-    }
-    console.log("Data after discarding column", dataset);
-    return dataset;
-  }
-
   async function train(data) {
     let dataset = data.map(x => Object.values(x).map(Number));
     dataset = shuffle(dataset);
     const test_train_split = 0.2;
-    console.log("Data before discarding column", dataset);
-    console.log("Covariance matrix", getCovarianceMatrix(dataset));
-    dataset = discardCovariantColumns(dataset);
-    const [features, targets] = getFeatureTargetSplit(dataset);
-    const normalizedFeatures = normalizeData(features);
-    const standardizedFeatures = standardizeData(features);
-    const [x_train, x_test, y_train, y_test] = getTestTrainSplit(
-      standardizedFeatures,
-      targets,
-      test_train_split
-    );
+    console.log("Data before discarding column", dataset)
+    console.log("Covariance matrix", getCovarianceMatrix(dataset))
+    dataset = discardCovariantColumns(dataset, getCovarianceMatrix(dataset))
+    const [features, targets] = getFeatureTargetSplit(dataset)
+    const normalizedFeatures = normalizeData(features)
+    const standardizedFeatures = standardizeData(features)
+    const [x_train, x_test, y_train, y_test] = getTestTrainSplit(standardizedFeatures, targets, test_train_split)
     const tensors = convertToTensors(x_train, x_test, y_train, y_test);
     console.log("x train", x_train);
     console.log("x test", x_test);
