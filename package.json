@@ -3,9 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@cognite/griff-react": "^0.5.0-rc.57",
     "@material-ui/core": "^4.4.3",
     "@tensorflow/tfjs": "^1.2.9",
     "@tensorflow/tfjs-vis": "^1.2.0",
+    "apexcharts": "^3.10.0",
     "d3": "^5.12.0",
     "firebase": "^7.0.0",
     "plotly.js": "^1.49.5",
