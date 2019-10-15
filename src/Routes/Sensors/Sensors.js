@@ -1,11 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useModels } from "../../stores/models/modelsStore";
-import {
-  useSensorNames,
-  useDataPoints
-} from "../../stores/sensors/sensorsStore";
+import { useSensorNames } from "../../stores/sensors/sensorsStore";
 import "./Sensors.css";
-import Sensor from "../../Components/Sensor/Sensor";
 
 import { csv } from "d3";
 
@@ -14,12 +10,10 @@ import * as tfvis from "@tensorflow/tfjs-vis";
 import * as data from "./data";
 
 const Sensors = props => {
-  const models = useModels();
-  const sensors = useSensorNames();
-  // const dataPoints = useDataPoints();
-
   const [sensorNames, setSensorNames] = useState([]);
   const [dataPoints, setDatapoints] = useState([]);
+
+  // TODO: NEXT STEP IS TO MAKE A LIST OF SENSORS: sensorName: { sensorName, unit, type },
 
   useEffect(() => {
     csv("/rig_good.csv").then(data => {

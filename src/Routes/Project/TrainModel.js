@@ -14,6 +14,7 @@ import * as tf from "@tensorflow/tfjs";
 import * as tfvis from "@tensorflow/tfjs-vis";
 import * as data from "./data";
 import getProcessedData from "./processData";
+import { storage } from "../../firebase";
 
 const TrainModel = ({ match }) => {
   const models = useModels();
@@ -109,7 +110,7 @@ const TrainModel = ({ match }) => {
 
     // learningrate
     const learningRate = 0.01;
-    const epochs = 20;
+    const epochs = 2;
     const optimizer = tf.train.adam(learningRate);
     model.compile({
       optimizer: optimizer,
@@ -133,9 +134,13 @@ const TrainModel = ({ match }) => {
 
     // 1261.0421142578125,27.090818405151367,4.955190658569336
 
-    model
+    /*model
       .predict(tf.tensor2d([[1261.0421142578125, 27.090818405151367]], [1, 2]))
-      .print();
+      .print();*/
+
+    const blob = new Blob([model], { type: "multipart/form-data" });
+
+    const uploadTask2 = storage.ref(`${projectName}/`).put(blob);
 
     // SAVE MODEL TO FIRESTORE AND TO STORE IN APPLICATION SO IT CAN PREDICT ELSEWHERE
 

@@ -1,23 +1,4 @@
 import sensorsStore from "./sensorsStore";
-import * as tf from "@tensorflow/tfjs";
-import { csv } from "d3";
-
-/*
-
-export function fetchSensors() {
-  console.log("FETCHING SENSORS");
-  sensorsStore.setState({ fetching: true });
-
-  return csv("rig_feil.csv").then(data => {
-    console.log(Object.keys(data[0]));
-    sensorsStore.setState({
-      data: data,
-      sensors: Object.keys(data[0])
-    });
-  });
-}
-
-*/
 
 export function setSensors(sensorNames) {
   sensorsStore.setState({
@@ -32,26 +13,49 @@ export function setDatapoints(dataPoints) {
 }
 
 export function setProjectName(projectName) {
+  let sensorData = sensorsStore.getState().sensorData;
+  sensorData["projectName"] = projectName;
   sensorsStore.setState({
-    projectName: projectName
+    sensorData: sensorData
   });
 }
 
-export function saveSensorData(sensor, type) {
-  let b = sensorsStore.getState().sensorData;
-  console.log(b);
-  if (b["internal"].indexOf(sensor) >= 0) {
-    b["internal"] = b["internal"].filter(s => s !== sensor);
-  }
-  if (b["input"].indexOf(sensor) >= 0) {
-    b["input"] = b["input"].filter(s => s !== sensor);
-  }
-  if (b["output"].indexOf(sensor) >= 0) {
-    b["output"] = b["output"].filter(s => s !== sensor);
-  }
-  b[type] = b[type].concat(sensor);
-  console.log(b);
+export function setLiveFeedURL(url) {
+  let sensorData = sensorsStore.getState().sensorData;
+  sensorData["URLtoLiveFeed"] = url;
   sensorsStore.setState({
-    sensorData: b
+    sensorData: sensorData
+  });
+}
+
+// CAN REMOVE THIS ONE
+export function saveSensorData(sensor, type, unit) {
+  let sensorData = sensorsStore.getState().sensorData;
+  console.log(sensorData);
+  if (sensorData["internal"].indexOf(sensor) >= 0) {
+    sensorData["internal"] = sensorData["internal"].filter(s => s !== sensor);
+  }
+  if (sensorData["input"].indexOf(sensor) >= 0) {
+    sensorData["input"] = sensorData["input"].filter(s => s !== sensor);
+  }
+  if (sensorData["output"].indexOf(sensor) >= 0) {
+    sensorData["output"] = sensorData["output"].filter(s => s !== sensor);
+  }
+  sensorData[type] = sensorData[type].concat(sensor);
+  console.log(sensorData);
+  sensorsStore.setState({
+    sensorData: sensorData
+  });
+}
+
+export function addSensor(sensor, type, unit) {
+  let sensorData = sensorsStore.getState().sensorData;
+  sensorData["sensors"] = sensorData["sensors"].concat({
+    name: sensor,
+    type: type,
+    unit: unit
+  });
+  sensorsStore.setState({
+    sensorData: sensorData
   });
 }
