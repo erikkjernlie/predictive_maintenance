@@ -36,6 +36,24 @@ import {
 
 import { storage } from "../../firebase";
 
+const modelData = {
+  sensors: {
+    inputs: ["sepal.length", "sepal.width", "petal.length"],
+    outputs: ["petal.width"],
+    internal: [],
+  },
+  config: [1, 0, 1, 1, 1],
+}
+
+const modelParams = {
+  test_train_split: 0.2,
+  activation: "relu",
+  learningRate: 0.01,
+  epochs: 20,
+  optimizer: tf.train.adam(0.01),
+  loss: "meanSquaredError",
+}
+
 const TrainModel = ({ match }) => {
   const models = useModels();
   const sensors = useSensorNames();
@@ -43,18 +61,16 @@ const TrainModel = ({ match }) => {
 
   // const dataPoints = useDataPoints();
 
-  const [sensorNames, setSensorNames] = useState([]);
-  const [dataPoints, setDatapoints] = useState([]);
+  const [sensorNames, setSensorNames] = useState();
+  const [dataPoints, setDatapoints] = useState();
 
   useEffect(() => {
     const uploadTask = storage.ref(`${projectName}/data.csv`);
     uploadTask.getDownloadURL().then(url => {
       csv(url).then(data => {
-        let sensorNames = Object.keys(data[0]);
-        setSensorNames(sensorNames);
+        setSensorNames(Object.keys(data[0]));
         setDatapoints(data);
-        console.log(sensorNames)
-        console.log(data)
+        console.log("data", data)
         train(data);
       });
     });
@@ -68,12 +84,13 @@ const TrainModel = ({ match }) => {
     */
   }, []);
 
-
-  function getFeatureTargetSplit(dataset) {
-    const numberOfColumns = Object.keys(dataset[0]).length;
-    console.log(numberOfColumns)
-    const features = dataset.map(x => x.slice(0, numberOfColumns - 1));
-    const targets = dataset.map(x => x.slice(numberOfColumns - 1));
+  function getFeatureTargetSplit(data) {
+    const feats = modelData.sensors.inputs.concat(modelData.sensors.internal)
+    const targs = modelData.sensors.outputs
+    let features = JSON.parse(JSON.stringify(data))
+    let targets = JSON.parse(JSON.stringify(data))
+    feats.forEach(feat => targets.forEach(x => delete x[feat]))
+    targs.forEach(targ => features.forEach(x => delete x[targ]))
     return [features, targets];
   }
 
@@ -99,33 +116,26 @@ const TrainModel = ({ match }) => {
   }
 
   async function train(data) {
-    console.log("data", data)
-    let dataset = data.map(x => Object.values(x).map(y => Number(y)));
-    console.log("dataset", dataset)
-    dataset = shuffle(dataset);
-    const test_train_split = 0.2;
-    console.log("Data before discarding column", dataset);
-    console.log("Covariance matrix", getCovarianceMatrix(dataset));
-    const dataset_reduced = discardCovariantColumns(dataset, getCovarianceMatrix(dataset));
-    console.log("reduced", dataset_reduced)
-    const [features, targets] = getFeatureTargetSplit(dataset);
-    console.log("Features", features)
-    console.log("Targets", targets)
-    const normalizedFeatures = normalizeData(features);
-    const standardizedFeatures = standardizeData(features);
+    data = shuffle(data)
+    let [features, targets] = getFeatureTargetSplit(data);
+    features = features.map(x => Object.values(x).map(y => Number(y)))
+    targets = targets.map(x => Object.values(x).map(y => Number(y)))
+    console.log("features", features)
+    console.log("targets", targets)
+    console.log("Covariance matrix", getCovarianceMatrix(features));
+    const features_reduced = discardCovariantColumns(features, getCovarianceMatrix(features));
+    const normalizedFeatures = normalizeData(features_reduced);
+    const standardizedFeatures = standardizeData(features_reduced);
     const [x_train, x_test, y_train, y_test] = getTestTrainSplit(
       standardizedFeatures,
       targets,
-      test_train_split
+      modelParams.test_train_split
     );
-    console.log("x_train", x_train)
-    console.log("y_train", y_train)
     const tensors = convertToTensors(x_train, x_test, y_train, y_test);
     //console.log("x train", x_train);
     //console.log("x test", x_test);
     //console.log("y train", y_train);
     //console.log("y test", y_test);
-    console.log("tensors", tensors.trainFeatures)
     const model = await trainModel(
       tensors.trainFeatures,
       tensors.trainTargets,
@@ -147,26 +157,22 @@ const TrainModel = ({ match }) => {
     model.add(
       tf.layers.dense({
         units: 10,
-        activation: "relu",
+        activation: modelParams.activation,
         inputShape: [xTrain.shape[1]]
       })
     );
     model.add(
       tf.layers.dense({
         units: 5,
-        activation: "relu"
+        activation: modelParams.activation
       })
     );
-    model.add(tf.layers.dense({ units: 1, activation: "relu" }));
+    model.add(tf.layers.dense({ units: 1, activation: modelParams.activation }));
     model.summary();
 
-    // learningrate
-    const learningRate = 0.01;
-    const epochs = 20;
-    const optimizer = tf.train.adam(learningRate);
     model.compile({
-      optimizer: optimizer,
-      loss: "meanSquaredError"
+      optimizer: modelParams.optimizer,
+      loss: modelParams.loss
     });
 
     const trainLogs = [];
@@ -178,7 +184,7 @@ const TrainModel = ({ match }) => {
     const beginMs = performance.now();
     // Call `model.fit` to train the model.
     const history = await model.fit(xTrain, yTrain, {
-      epochs: epochs,
+      epochs: modelParams.epochs,
       validationData: [xTest, yTest],
       callbacks: callbacks
     });
@@ -203,21 +209,18 @@ const TrainModel = ({ match }) => {
         console.log("UPLOADED");
       });
       */
-    console.log(model.predict(tf.tensor2d([[2.0, 2.0, 2.0]], [1, 3])).print())
 
     // await model.save(ref.bucket + "/" + ref.fullPath);
     await model.save("indexeddb://" + projectName + "/model").then(() => {
       // model saved in indexeddb
       // can easily be loaded again
     });
-    const reallyFuckingStupidFuckedUpModel = tf.sequential()
-    console.log(reallyFuckingStupidFuckedUpModel)
     console.log("Loading model")
-    const model123 = await tf.loadLayersModel("indexeddb://" + projectName + "/model");
-    console.log(model)
-    console.log(model123)
-
-    console.log(model123.predict(tf.tensor2d([[2.0, 2.0, 3.0]], [1, 3])).print())
+    const loadedModel = await tf.loadLayersModel("indexeddb://" + projectName + "/model");
+    console.log("Saved model", model)
+    console.log("Loaded model", loadedModel)
+    console.log("Saved prediction", model.predict(tf.tensor2d([[2.0, 2.0]], [1, xTrain.shape[1]])).print())
+    console.log("Loaded prediction", loadedModel.predict(tf.tensor2d([[2.0, 2.0]], [1, xTrain.shape[1]])).print())
 
     //model
     //.predict(tf.tensor2d([[1.0, 4.0, 2.0]], [1, 3]))

@@ -36,10 +36,10 @@ export function getCovarianceMatrix(dataset) {
   }
 
 export function discardCovariantColumns(dataset, cov) {
-    let clone = dataset.slice();
+    let clone = JSON.parse(JSON.stringify(dataset));
     for (var i = 0; i < dataset[0].length; i++) {
       for (var j = i+1; j < dataset[0].length; j++) {
-        if (cov[i][j] > 0.95) {
+        if (cov[i][j] > 0.90) {
           clone = clone.map(x => x.slice(0,i).concat(x.slice(i+1)))
         }
       }
