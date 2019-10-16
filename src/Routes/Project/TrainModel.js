@@ -33,6 +33,7 @@ import {
   getDatasetByColumns,
   discardCovariantColumns
 } from "./statisticsLib.js";
+
 import { storage } from "../../firebase";
 
 const TrainModel = ({ match }) => {
@@ -46,12 +47,16 @@ const TrainModel = ({ match }) => {
   const [dataPoints, setDatapoints] = useState([]);
 
   useEffect(() => {
-    csv("/iris_mod_extended.csv").then(data => {
-      let sensorNames = Object.keys(data[0]);
-      setSensorNames(sensorNames);
-      setDatapoints(data);
-
-      train(data);
+    const uploadTask = storage.ref(`${projectName}/data.csv`);
+    uploadTask.getDownloadURL().then(url => {
+      csv(url).then(data => {
+        let sensorNames = Object.keys(data[0]);
+        setSensorNames(sensorNames);
+        setDatapoints(data);
+        console.log(sensorNames)
+        console.log(data)
+        train(data);
+      });
     });
 
     /*
@@ -63,9 +68,10 @@ const TrainModel = ({ match }) => {
     */
   }, []);
 
+
   function getFeatureTargetSplit(dataset) {
     const numberOfColumns = Object.keys(dataset[0]).length;
-
+    console.log(numberOfColumns)
     const features = dataset.map(x => x.slice(0, numberOfColumns - 1));
     const targets = dataset.map(x => x.slice(numberOfColumns - 1));
     return [features, targets];
@@ -93,13 +99,18 @@ const TrainModel = ({ match }) => {
   }
 
   async function train(data) {
-    let dataset = data.map(x => Object.values(x).map(Number));
+    console.log("data", data)
+    let dataset = data.map(x => Object.values(x).map(y => Number(y)));
+    console.log("dataset", dataset)
     dataset = shuffle(dataset);
     const test_train_split = 0.2;
-    //console.log("Data before discarding column", dataset);
-    //console.log("Covariance matrix", getCovarianceMatrix(dataset));
-    dataset = discardCovariantColumns(dataset, getCovarianceMatrix(dataset));
+    console.log("Data before discarding column", dataset);
+    console.log("Covariance matrix", getCovarianceMatrix(dataset));
+    const dataset_reduced = discardCovariantColumns(dataset, getCovarianceMatrix(dataset));
+    console.log("reduced", dataset_reduced)
     const [features, targets] = getFeatureTargetSplit(dataset);
+    console.log("Features", features)
+    console.log("Targets", targets)
     const normalizedFeatures = normalizeData(features);
     const standardizedFeatures = standardizeData(features);
     const [x_train, x_test, y_train, y_test] = getTestTrainSplit(
@@ -107,12 +118,14 @@ const TrainModel = ({ match }) => {
       targets,
       test_train_split
     );
+    console.log("x_train", x_train)
+    console.log("y_train", y_train)
     const tensors = convertToTensors(x_train, x_test, y_train, y_test);
     //console.log("x train", x_train);
     //console.log("x test", x_test);
     //console.log("y train", y_train);
     //console.log("y test", y_test);
-
+    console.log("tensors", tensors.trainFeatures)
     const model = await trainModel(
       tensors.trainFeatures,
       tensors.trainTargets,
@@ -128,6 +141,7 @@ const TrainModel = ({ match }) => {
     // console.log("Start training");
     // const params = ui.loadTrainParametersFromUI();
 
+    console.log("xtrain shape", xTrain.shape[1])
     // Define the topology of the model: two dense layers.
     const model = tf.sequential();
     model.add(
@@ -148,7 +162,7 @@ const TrainModel = ({ match }) => {
 
     // learningrate
     const learningRate = 0.01;
-    const epochs = 2;
+    const epochs = 20;
     const optimizer = tf.train.adam(learningRate);
     model.compile({
       optimizer: optimizer,
@@ -189,12 +203,21 @@ const TrainModel = ({ match }) => {
         console.log("UPLOADED");
       });
       */
+    console.log(model.predict(tf.tensor2d([[2.0, 2.0, 2.0]], [1, 3])).print())
 
     // await model.save(ref.bucket + "/" + ref.fullPath);
     await model.save("indexeddb://" + projectName + "/model").then(() => {
       // model saved in indexeddb
       // can easily be loaded again
     });
+    const reallyFuckingStupidFuckedUpModel = tf.sequential()
+    console.log(reallyFuckingStupidFuckedUpModel)
+    console.log("Loading model")
+    const model123 = await tf.loadLayersModel("indexeddb://" + projectName + "/model");
+    console.log(model)
+    console.log(model123)
+
+    console.log(model123.predict(tf.tensor2d([[2.0, 2.0, 3.0]], [1, 3])).print())
 
     //model
     //.predict(tf.tensor2d([[1.0, 4.0, 2.0]], [1, 3]))

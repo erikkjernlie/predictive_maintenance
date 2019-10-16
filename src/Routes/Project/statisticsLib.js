@@ -36,16 +36,15 @@ export function getCovarianceMatrix(dataset) {
   }
 
 export function discardCovariantColumns(dataset, cov) {
+    let clone = dataset.slice();
     for (var i = 0; i < dataset[0].length; i++) {
       for (var j = i+1; j < dataset[0].length; j++) {
         if (cov[i][j] > 0.95) {
-          dataset = dataset.map(x => x.splice(i))
-          break
+          clone = clone.map(x => x.slice(0,i).concat(x.slice(i+1)))
         }
       }
     }
-    console.log("Data after discarding column", dataset)
-    return dataset
+    return clone
   }
 
 export function standardizeData(dataset) {
@@ -91,9 +90,6 @@ export function normalizeData(data) {
   }
 
 export function getR2Score(predict, data) {
-    console.log("Inside getRSquared function")
-    console.log(predict)
-    console.log(data)
     data = data.map(x => Number(x));
     predict = predict.map(x => Number(x))
 
