@@ -1,6 +1,12 @@
 import React, { Component } from "react";
 import PlotIt from "./PlotIt";
 import struct from "@aksel/structjs";
+import {
+  fetchTopics,
+  subscribeToSource,
+  fetchAuthCookie
+} from "../../stores/models/modelsActions";
+
 const URL = "ws://169.254.109.234:1337";
 
 class MySocket extends Component {
@@ -9,8 +15,10 @@ class MySocket extends Component {
   state = {
     sourceBuffers: {},
     packetCounter: 0,
+    topics: [],
     pushDataIntervalID: undefined,
     data: [],
+    selectedSources: [],
     subscribedSources: {
       "0000": {
         byteFormat: "<HHIdddddddddddd",
@@ -25,7 +33,88 @@ class MySocket extends Component {
     }
   };
 
+  bundleMatrixOutput = (allOutputs, matrixOutputRefs) => {
+    const matrixOutputs = Object.entries(matrixOutputRefs).map(matrixOutput => {
+      const matrixOutputIndices = matrixOutput[1];
+      let matrixChannels = [];
+      // Fetch matrixchannels from scalaroutputs which holds all the output channels when entering this function
+      matrixOutputIndices.forEach(index => {
+        const matrixChannel = allOutputs[index];
+        matrixChannels.push(matrixChannel);
+      });
+      return {
+        channelName: matrixOutput[0] + "_matrix",
+        outputChannels: matrixChannels
+      };
+    });
+    // Filter out scalar outputs based on if the name does not contain '_mXY' where X and Y are integers
+    const scalarOutputs = allOutputs.filter(
+      channel => !/_m\d\d/.test(channel.channelName)
+    );
+    return scalarOutputs.concat(matrixOutputs);
+  };
+
+  makeChannels = topicJSON => {
+    if (topicJSON.output_names === undefined) {
+      return [];
+    }
+    const matrixOutputRefs = topicJSON.matrix_outputs;
+    let allOutputs = topicJSON.output_names.map((output_name, index) => ({
+      id: index,
+      channelName: output_name
+    }));
+    if (
+      matrixOutputRefs === undefined ||
+      Object.keys(matrixOutputRefs).length === 0
+    ) {
+      // There exists no matrixOutputs return all outputs as they are
+      return allOutputs;
+    }
+    return this.bundleMatrixOutput(allOutputs, matrixOutputRefs);
+  };
+
   componentDidMount() {
+    (async () => {
+      await fetchAuthCookie();
+      const topicsJSON = await fetchTopics();
+      console.log("FETCHING TOPICS", topicsJSON);
+      if (!topicsJSON) return;
+      this.setState({
+        topics: Object.entries(topicsJSON).map(topic => ({
+          id: topic[0],
+          url: topic[1].url,
+          byteFormat: topic[1].byte_format,
+          channels: this.makeChannels(topic[1]) || []
+        }))
+      });
+
+      const subscribe = subscribeToSource("0000");
+
+      // ADD EVERYTHING TO SELECTED SOURCES
+      const subscribeSources = this.state.selectedSources
+        .filter(
+          source =>
+            source.selectedChannels !== undefined &&
+            source.selectedChannels.length > 0
+        )
+        .map(source => ({
+          id: source.id,
+          name: source.url.split("/")[2],
+          byteFormat: source.byteFormat,
+          url: source.url,
+          subscribedChannels: this.unBundleMatrixChannels(
+            source.selectedChannels
+          )
+        }));
+      /*
+      await this.$store.dispatch(
+        "channelModule/generateDataSources",
+        subscribeSources
+      );
+      EventBus.$emit(EVENTS.subscribe, subscribeSources);
+      */
+    })();
+
     this.ws.binaryType = "arraybuffer";
 
     this.ws.onopen = () => {
@@ -35,6 +124,7 @@ class MySocket extends Component {
     };
 
     this.ws.onmessage = evt => {
+      console.log("MESSAGE", evt);
       // on receiving a message, add it to the list of messages
       if (evt.data.byteLength > 0) {
         const data = evt.data;
@@ -53,6 +143,17 @@ class MySocket extends Component {
       // automatically try to reconnect on connection loss
     };
   }
+
+  unBundleMatrixChannels = channels => {
+    // unbundling matrix channels
+    const matrixChannels = channels
+      .filter(channel => channel.channelName.includes("_matrix"))
+      .flatMap(channel => channel.outputChannels);
+    // putting scalar channels together with the matrix ones
+    return channels
+      .filter(channel => !channel.channelName.includes("_matrix"))
+      .concat(matrixChannels);
+  };
 
   parseData = (data, sourceID) => {
     const sourceBuffer = this.state.sourceBuffers[sourceID];
@@ -125,6 +226,8 @@ class MySocket extends Component {
       */
     }
   };
+
+  loadSources = () => {};
 
   render() {
     return (

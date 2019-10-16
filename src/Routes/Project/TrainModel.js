@@ -50,6 +50,7 @@ const TrainModel = ({ match }) => {
       let sensorNames = Object.keys(data[0]);
       setSensorNames(sensorNames);
       setDatapoints(data);
+      console.log("feks", data);
 
       train(data);
     });
