@@ -4,8 +4,8 @@ import "./ExistingProjects.css";
 import { setProjectName } from "../../stores/sensors/sensorsActions";
 
 const ExistingProjects = () => {
-  const changeProject = project => {
-    // setProjectName(project);
+  const setName = project => {
+    setProjectName(project);
   };
 
   return (
@@ -18,12 +18,10 @@ const ExistingProjects = () => {
               .getItem("projects")
               .split(" ")
               .map((project, index) => (
-                <div
-                  className="Link"
-                  key={index}
-                  onClick={() => changeProject(project)}
-                >
-                  <Link to={project}>{project}</Link>
+                <div className="Link" key={index}>
+                  <Link to={project} onClick={() => setName(project)}>
+                    {project}
+                  </Link>
                 </div>
               ))}
           </div>

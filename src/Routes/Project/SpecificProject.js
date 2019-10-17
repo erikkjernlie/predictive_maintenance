@@ -13,8 +13,9 @@ import {
   setProjectName
 } from "../../stores/sensors/sensorsActions";
 import Sensor from "../../Components/Sensor/Sensor";
+import { Redirect } from "react-router-dom";
 
-const MyProject = ({ match }) => {
+const SpecificProject = ({ match }) => {
   const dataPoints = useDataPoints();
   const sensorNames = useSensorNames();
   // PROJECTNAME const p = useSensorNames();
@@ -26,13 +27,18 @@ const MyProject = ({ match }) => {
   const lastLoadedProjectName = useProjectName();
 
   useEffect(() => {
-    console.log("data", dataPoints);
-    if (dataPoints.length === 0 || projectName !== lastLoadedProjectName) {
+    console.log("LAST LOADED", projectName, lastLoadedProjectName);
+    if (
+      (dataPoints.length === 0 && projectName) ||
+      (projectName !== lastLoadedProjectName &&
+        (projectName && lastLoadedProjectName))
+    ) {
       setLoading(true);
+      console.log("IN HERE");
 
-      // WE NEED TO FETCH DATA IF WE DO NOT HAVE ANYTHING OR IF WE HAVE THE WRONG DATA
-      const uploadTask = storage.ref(`${projectName}/data.csv`);
-      uploadTask.getDownloadURL().then(url => {
+      // fetching data if we de not have anything from before
+      const downloadRef = storage.ref(`${projectName}/data.csv`);
+      downloadRef.getDownloadURL().then(url => {
         csv(url).then(data => {
           let sensorNames = Object.keys(data[0]);
           setSensors(sensorNames);
@@ -41,14 +47,23 @@ const MyProject = ({ match }) => {
           setLoading(false);
         });
       });
+    } else if (
+      projectName === undefined &&
+      lastLoadedProjectName.length === 0
+    ) {
+      console.log("THATS FUCKING TRUE");
     } else {
-      console.log("WE HAVE ALREADY FETCHED DATA");
+      console.log("We have already fetched data");
     }
   }, []);
 
   return (
     <div>
       <div>Configuration</div>
+      {loading && <div>Loading data...</div>}
+      {projectName === undefined && lastLoadedProjectName.length === 0 && (
+        <div>NO CURRENT PROJECT </div>
+      )}
       {!loading && (
         <div>
           <div>{lastLoadedProjectName}</div>
@@ -81,4 +96,4 @@ const MyProject = ({ match }) => {
   );
 };
 
-export default MyProject;
+export default SpecificProject;

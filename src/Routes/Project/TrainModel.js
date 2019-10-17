@@ -7,9 +7,7 @@ import {
 import "./TrainModel.css";
 import Sensor from "../../Components/Sensor/Sensor";
 import { Link } from "react-router-dom";
-import {
-  shuffle,
-} from "simple-statistics";
+import { shuffle } from "simple-statistics";
 
 import { csv } from "d3";
 
@@ -34,14 +32,14 @@ const modelData = {
   url: "www.myProject.com",
   sensors: {
     inputs: ["sepal.length", "sepal.width", "petal.length"],
-    outputs: ["petal.width"],
+    outputs: ["petal.width"]
   },
   config: {
     standardization: true,
     complex: false,
-    reduce: true,
+    reduce: true
   }
-}
+};
 
 // 1. "My dataset has columns with very different value ranges" --> true: standardization, false: normalzation
 // 2. "My dataset is very complex" --> true: flere/bredere lag, false: standard modell
@@ -53,8 +51,8 @@ const modelParams = {
   learningRate: 0.01,
   epochs: 20,
   optimizer: tf.train.adam(0.01),
-  loss: "meanSquaredError",
-}
+  loss: "meanSquaredError"
+};
 
 const TrainModel = ({ match }) => {
   const models = useModels();
@@ -72,27 +70,19 @@ const TrainModel = ({ match }) => {
       csv(url).then(data => {
         setSensorNames(Object.keys(data[0]));
         setDatapoints(data);
-        console.log("data", data)
+        console.log("data", data);
         train(data);
       });
     });
-
-    /*
-    const dataset = tf.data.csv(
-      "https://firebasestorage.googleapis.com/v0/b/tpk4450-project.appspot.com/o/rig_good.csv?alt=media&token=9792ce1c-7196-4a0d-80c2-f83ad35d7744"
-    );
-    const dataset2 = tf.data.csv("./rig_good.csv");
-    console.log("TF DATA", dataset2);
-    */
   }, []);
 
   function getFeatureTargetSplit(data) {
-    const feats = modelData.sensors.inputs.concat(modelData.sensors.internal)
-    const targs = modelData.sensors.outputs
-    let features = JSON.parse(JSON.stringify(data))
-    let targets = JSON.parse(JSON.stringify(data))
-    feats.forEach(feat => targets.forEach(x => delete x[feat]))
-    targs.forEach(targ => features.forEach(x => delete x[targ]))
+    const feats = modelData.sensors.inputs.concat(modelData.sensors.internal);
+    const targs = modelData.sensors.outputs;
+    let features = JSON.parse(JSON.stringify(data));
+    let targets = JSON.parse(JSON.stringify(data));
+    feats.forEach(feat => targets.forEach(x => delete x[feat]));
+    targs.forEach(targ => features.forEach(x => delete x[targ]));
     return [features, targets];
   }
 
@@ -118,20 +108,20 @@ const TrainModel = ({ match }) => {
   }
 
   async function train(data) {
-    data = shuffleData(data)
+    data = shuffleData(data);
     let [features, targets] = getFeatureTargetSplit(data);
-    features = features.map(x => Object.values(x).map(y => Number(y)))
-    targets = targets.map(x => Object.values(x).map(y => Number(y)))
-    console.log("features", features)
-    console.log("targets", targets)
+    features = features.map(x => Object.values(x).map(y => Number(y)));
+    targets = targets.map(x => Object.values(x).map(y => Number(y)));
+    console.log("features", features);
+    console.log("targets", targets);
     console.log("Covariance matrix", getCovarianceMatrix(features));
     if (modelData.config.reduce) {
-      features = discardCovariantColumns(features)
+      features = discardCovariantColumns(features);
     }
     if (modelData.config.standardization) {
-      features = standardizeData(features)
+      features = standardizeData(features);
     } else {
-      features = normalizeData(features)
+      features = normalizeData(features);
     }
     const [x_train, x_test, y_train, y_test] = getTestTrainSplit(
       features,
@@ -163,8 +153,10 @@ const TrainModel = ({ match }) => {
         inputShape: [inputSize]
       })
     );
-    model.add(tf.layers.dense({ units: 1, activation: modelParams.activation }));
-    return model
+    model.add(
+      tf.layers.dense({ units: 1, activation: modelParams.activation })
+    );
+    return model;
   }
 
   function getComplexModel(inputSize) {
@@ -182,21 +174,23 @@ const TrainModel = ({ match }) => {
         activation: modelParams.activation
       })
     );
-    model.add(tf.layers.dense({ units: 1, activation: modelParams.activation }));
-    return model
+    model.add(
+      tf.layers.dense({ units: 1, activation: modelParams.activation })
+    );
+    return model;
   }
 
   async function trainModel(xTrain, yTrain, xTest, yTest) {
     // console.log("Start training");
     // const params = ui.loadTrainParametersFromUI();
 
-    console.log("xtrain shape", xTrain.shape[1])
+    console.log("xtrain shape", xTrain.shape[1]);
     // Define the topology of the model: two dense layers.
     let model;
     if (modelData.config.complex) {
-      model = getComplexModel(xTrain.shape[1])
+      model = getComplexModel(xTrain.shape[1]);
     } else {
-      model = getBasicModel(xTrain.shape[1])
+      model = getBasicModel(xTrain.shape[1]);
     }
     model.summary();
 
@@ -220,15 +214,25 @@ const TrainModel = ({ match }) => {
     });
 
     await model.save("indexeddb://" + projectName + "/model").then(() => {
-      console.log("Model saved to indexeddb")
+      console.log("Model saved to indexeddb");
     });
 
-    console.log("Loading model")
-    const loadedModel = await tf.loadLayersModel("indexeddb://" + projectName + "/model");
-    console.log("Saved model", model)
-    console.log("Loaded model", loadedModel)
-    console.log("Saved prediction", model.predict(tf.tensor2d([[2.0, 2.0]], [1, xTrain.shape[1]])).print())
-    console.log("Loaded prediction", loadedModel.predict(tf.tensor2d([[2.0, 2.0]], [1, xTrain.shape[1]])).print())
+    console.log("Loading model");
+    const loadedModel = await tf.loadLayersModel(
+      "indexeddb://" + projectName + "/model"
+    );
+    console.log("Saved model", model);
+    console.log("Loaded model", loadedModel);
+    console.log(
+      "Saved prediction",
+      model.predict(tf.tensor2d([[2.0, 2.0]], [1, xTrain.shape[1]])).print()
+    );
+    console.log(
+      "Loaded prediction",
+      loadedModel
+        .predict(tf.tensor2d([[2.0, 2.0]], [1, xTrain.shape[1]]))
+        .print()
+    );
 
     return model;
   }

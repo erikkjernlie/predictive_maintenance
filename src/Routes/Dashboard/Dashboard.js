@@ -1,26 +1,11 @@
-import React, { useEffect } from "react";
+import React from "react";
 import ExistingProjects from "../../Components/ExistingProjects/ExistingProjects";
-import { csv } from "d3";
-import { DataProvider, Series } from "@cognite/griff-react";
-import ApexCharts from "apexcharts";
-import MySocket from "./MySocket.js";
-import Socket2 from "./Socket2";
+import "./Dashboard.css";
 
 const Dashboard = props => {
-  useEffect(() => {
-    /*
-    csv("rig_good.csv").then(data => {
-      console.log(data.map(s => parseFloat(s["Load"])));
-    });
-    */
-  }, []);
-
   return (
-    <div>
-      here it comes
+    <div className="Dashboard__container">
       <ExistingProjects />
-      <MySocket />
-      <Socket2 />
     </div>
   );
 };

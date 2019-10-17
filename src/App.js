@@ -36,17 +36,9 @@ const App = () => {
             path="/projects"
             render={props => <Dashboard {...props} />}
           />
-          <Route
-            exact
-            path="/"
-            render={props => <Dashboard {...props} />}
-          />
+          <Route exact path="/" render={props => <Project {...props} />} />
           <Route path="/newProject" render={props => <Upload {...props} />} />
 
-          <Route
-            path={`/dashboard`}
-            render={props => <Dashboard {...props} />}
-          />
           <Route path="/sensors" render={props => <Sensors {...props} />} />
           <Route
             path={`/:projectName`}
