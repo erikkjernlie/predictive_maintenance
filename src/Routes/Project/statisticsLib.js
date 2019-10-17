@@ -35,7 +35,8 @@ export function getCovarianceMatrix(dataset) {
     return covariances
   }
 
-export function discardCovariantColumns(dataset, cov) {
+export function discardCovariantColumns(dataset) {
+    const cov = getCovarianceMatrix(dataset)
     let clone = JSON.parse(JSON.stringify(dataset));
     for (var i = 0; i < dataset[0].length; i++) {
       for (var j = i+1; j < dataset[0].length; j++) {

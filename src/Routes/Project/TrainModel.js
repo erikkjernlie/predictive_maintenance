@@ -42,8 +42,13 @@ const modelData = {
     outputs: ["petal.width"],
     internal: [],
   },
-  config: [1, 0, 1, 1, 1],
+  config: [1, 0],
 }
+
+// "My dataset..."
+
+// 1. "... has columns with very different value ranges" --> true: standardization, false: normalzation
+// 2. "... is very complex" --> true: flere/bredere lag, false: standard modell
 
 const modelParams = {
   test_train_split: 0.2,
@@ -61,8 +66,8 @@ const TrainModel = ({ match }) => {
 
   // const dataPoints = useDataPoints();
 
-  const [sensorNames, setSensorNames] = useState();
-  const [dataPoints, setDatapoints] = useState();
+  const [sensorNames, setSensorNames] = useState([]);
+  const [dataPoints, setDatapoints] = useState([]);
 
   useEffect(() => {
     const uploadTask = storage.ref(`${projectName}/data.csv`);
@@ -123,7 +128,7 @@ const TrainModel = ({ match }) => {
     console.log("features", features)
     console.log("targets", targets)
     console.log("Covariance matrix", getCovarianceMatrix(features));
-    const features_reduced = discardCovariantColumns(features, getCovarianceMatrix(features));
+    const features_reduced = discardCovariantColumns(features);
     const normalizedFeatures = normalizeData(features_reduced);
     const standardizedFeatures = standardizeData(features_reduced);
     const [x_train, x_test, y_train, y_test] = getTestTrainSplit(
