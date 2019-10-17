@@ -17,10 +17,10 @@ const ExistingProjects = () => {
             {localStorage
               .getItem("projects")
               .split(" ")
-              .map(project => (
+              .map((project, index) => (
                 <div
                   className="Link"
-                  key={project}
+                  key={index}
                   onClick={() => changeProject(project)}
                 >
                   <Link to={project}>{project}</Link>
