@@ -15,7 +15,7 @@ import {
 import Sensor from "../../Components/Sensor/Sensor";
 import { Redirect } from "react-router-dom";
 
-const SpecificProject = ({ match }) => {
+const CurrentProject = ({ match }) => {
   const dataPoints = useDataPoints();
   const sensorNames = useSensorNames();
   // PROJECTNAME const p = useSensorNames();
@@ -96,4 +96,4 @@ const SpecificProject = ({ match }) => {
   );
 };
 
-export default SpecificProject;
+export default CurrentProject;
