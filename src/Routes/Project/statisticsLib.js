@@ -124,4 +124,8 @@ export function getR2Score(predict, data) {
     };
   }
 
+  export function shuffleData(data) {
+    return shuffle(data)
+  }
+
 export default getR2Score
