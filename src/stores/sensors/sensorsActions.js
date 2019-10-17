@@ -14,6 +14,14 @@ export function setDatapoints(dataPoints) {
   });
 }
 
+export function setConfig(variable, value) {
+  let sensorData = sensorsStore.getState().sensorData;
+  sensorData[variable] = value;
+  sensorsStore.setState({
+    sensorData: sensorData
+  });
+}
+
 export function setProjectName(projectName) {
   let sensorData = sensorsStore.getState().sensorData;
 

@@ -13,7 +13,10 @@ const store = createStore({
     internal: [],
     sensors: [],
     projectName: "",
-    URLtoLiveFeed: ""
+    URLtoLiveFeed: "",
+    hasDifferentValueRanges: false,
+    reduceTrainingTime: false,
+    isComplex: false
   }
 });
 

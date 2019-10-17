@@ -12,9 +12,11 @@ import {
   setDatapoints,
   setSensors,
   setLiveFeedURL,
-  setProjectName
+  setProjectName,
+  setConfig
 } from "../../stores/sensors/sensorsActions";
 import { min } from "simple-statistics";
+import { Checkbox } from "@material-ui/core";
 
 const Upload = props => {
   const [file, setFile] = useState(null);
@@ -22,6 +24,10 @@ const Upload = props => {
 
   const [uploading, setUploading] = useState(false);
   const [sensorNames, setSensorNames] = useState([]);
+
+  const [hasDifferentValueRanges, setHasDifferentValueRanges] = useState(false);
+  const [isComplex, setIsComplex] = useState(false);
+  const [reduceTrainingTime, setReduceTrainingTime] = useState(false);
 
   const sensorData = useSensorData();
 
@@ -144,6 +150,28 @@ const Upload = props => {
     );
   };
 
+  const changeDatasetFact = id => {
+    switch (id) {
+      case "reduceTrainingTime":
+        setConfig("reduceTrainingTime", !reduceTrainingTime);
+        setReduceTrainingTime(!reduceTrainingTime);
+        break;
+      case "isComplex":
+        setConfig("isComplex", !isComplex);
+
+        setIsComplex(!isComplex);
+
+        break;
+      case "hasDifferentValueRanges":
+        setConfig("hasDifferentValueRanges", !hasDifferentValueRanges);
+        setHasDifferentValueRanges(!hasDifferentValueRanges);
+
+        break;
+      default:
+        break;
+    }
+  };
+
   return (
     <div className="Container">
       <div className="NewProject">Create new project</div>
@@ -178,10 +206,39 @@ const Upload = props => {
                 ))}
             </tbody>
           </table>
-          <button onClick={startTraining}>Continue to train model</button>
         </React.Fragment>
+        <div>
+          <div>
+            Do the columns in the dataset have very different value ranges?
+          </div>
+          <Checkbox
+            checked={hasDifferentValueRanges}
+            onClick={() => changeDatasetFact("hasDifferentValueRanges")}
+          />
+        </div>
+        <div>
+          <div>Is the very dataset very complex?</div>
+          <Checkbox
+            checked={isComplex}
+            onClick={() => changeDatasetFact("isComplex")}
+          />
+        </div>
+        <div>
+          <div>
+            Do you want to reduce the training time by discarding covariant
+            features?
+          </div>
+          <Checkbox
+            checked={reduceTrainingTime}
+            onClick={() => changeDatasetFact("reduceTrainingTime")}
+          />
+        </div>
+        <button onClick={startTraining}>Continue to train model</button>
       </div>
     </div>
   );
 };
 export default Upload;
+// 1. "My dataset has columns with very different value ranges" --> true: standardization, false: normalzation
+// 2. "My dataset is very complex" --> true: flere/bredere lag, false: standard modell
+// 3. "I want to reduce training time by discarding covariant features" --> true: discardColumns, false: ikke

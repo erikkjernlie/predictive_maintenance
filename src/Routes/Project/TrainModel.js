@@ -35,9 +35,9 @@ const modelData = {
     outputs: ["petal.width"]
   },
   config: {
-    standardization: true,
-    complex: false,
-    reduce: true
+    hasDifferentValueRanges: false,
+    isComplex: false,
+    reduceTrainingTime: false
   }
 };
 
@@ -115,10 +115,10 @@ const TrainModel = ({ match }) => {
     console.log("features", features);
     console.log("targets", targets);
     console.log("Covariance matrix", getCovarianceMatrix(features));
-    if (modelData.config.reduce) {
+    if (modelData.config.reduceTrainingTime) {
       features = discardCovariantColumns(features);
     }
-    if (modelData.config.standardization) {
+    if (modelData.config.hasDifferentValueRanges) {
       features = standardizeData(features);
     } else {
       features = normalizeData(features);
@@ -187,7 +187,7 @@ const TrainModel = ({ match }) => {
     console.log("xtrain shape", xTrain.shape[1]);
     // Define the topology of the model: two dense layers.
     let model;
-    if (modelData.config.complex) {
+    if (modelData.config.isComplex) {
       model = getComplexModel(xTrain.shape[1]);
     } else {
       model = getBasicModel(xTrain.shape[1]);
