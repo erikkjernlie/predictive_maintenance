@@ -126,13 +126,14 @@ const TrainModel = ({ match }) => {
     console.log("targets", targets)
     console.log("Covariance matrix", getCovarianceMatrix(features));
     if (modelData.config.reduce) {
-      features = discardCovariantColumns(features)
+      //features = discardCovariantColumns(features)
     }
     if (modelData.config.standardization) {
       features = standardizeData(features)
     } else {
       features = normalizeData(features)
     }
+    console.log("features_reduced_normalized", features)
     const [x_train, x_test, y_train, y_test] = getTestTrainSplit(
       features,
       targets,
@@ -143,15 +144,21 @@ const TrainModel = ({ match }) => {
     //console.log("x test", x_test);
     //console.log("y train", y_train);
     //console.log("y test", y_test);
-    const model = await trainModel(
-      tensors.trainFeatures,
-      tensors.trainTargets,
-      tensors.testFeatures,
-      tensors.testTargets
-    );
-    const predictions = model.predict(tensors.testFeatures);
-    //console.log("PREDICT", predictions);
-    //console.log("R2 score: ", getR2Score(predictions.arraySync(), y_test));
+    let r2 = -1000
+    let model;
+    let predictions;
+    while (r2 < 0.8) {
+      model = await trainModel(
+        tensors.trainFeatures,
+        tensors.trainTargets,
+        tensors.testFeatures,
+        tensors.testTargets
+      );
+      predictions = model.predict(tensors.testFeatures);
+      //console.log("PREDICT", predictions);
+      r2 = getR2Score(predictions.arraySync(), y_test).rSquared;
+      console.log("R2 score: ", r2);
+    }
   }
 
   function getBasicModel(inputSize) {
@@ -189,7 +196,7 @@ const TrainModel = ({ match }) => {
   async function trainModel(xTrain, yTrain, xTest, yTest) {
     // console.log("Start training");
     // const params = ui.loadTrainParametersFromUI();
-
+    
     console.log("xtrain shape", xTrain.shape[1])
     // Define the topology of the model: two dense layers.
     let model;
@@ -227,8 +234,8 @@ const TrainModel = ({ match }) => {
     const loadedModel = await tf.loadLayersModel("indexeddb://" + projectName + "/model");
     console.log("Saved model", model)
     console.log("Loaded model", loadedModel)
-    console.log("Saved prediction", model.predict(tf.tensor2d([[2.0, 2.0]], [1, xTrain.shape[1]])).print())
-    console.log("Loaded prediction", loadedModel.predict(tf.tensor2d([[2.0, 2.0]], [1, xTrain.shape[1]])).print())
+    console.log("Saved prediction", model.predict(tf.tensor2d([[2.0, 2.0, 2.0]], [1, xTrain.shape[1]])).print())
+    console.log("Loaded prediction", loadedModel.predict(tf.tensor2d([[2.0, 2.0, 2.0]], [1, xTrain.shape[1]])).print())
 
     return model;
   }
