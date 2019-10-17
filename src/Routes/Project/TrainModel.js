@@ -118,7 +118,7 @@ const TrainModel = ({ match }) => {
   }
 
   async function train(data) {
-    data = shuffle(data)
+    data = shuffleData(data)
     let [features, targets] = getFeatureTargetSplit(data);
     features = features.map(x => Object.values(x).map(y => Number(y)))
     targets = targets.map(x => Object.values(x).map(y => Number(y)))
