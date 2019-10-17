@@ -12,7 +12,8 @@ import "./CurrentProject.css";
 import {
   setDatapoints,
   setSensors,
-  setProjectName
+  setProjectName,
+  setSensorData
 } from "../../stores/sensors/sensorsActions";
 import Sensor from "../../Components/Sensor/Sensor";
 import { Redirect } from "react-router-dom";
@@ -47,6 +48,13 @@ const CurrentProject = ({ match }) => {
           setDatapoints(data);
           setProjectName(projectName);
           setLoading(false);
+        });
+      });
+      const downloadRef2 = storage.ref(`${projectName}/sensorData.json`);
+      downloadRef2.getDownloadURL().then(url => {
+        csv(url).then(sensorData => {
+          // console.log(JSON.parse(sensorData));
+          // setSensorData(sensorData);
         });
       });
     } else if (

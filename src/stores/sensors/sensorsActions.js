@@ -55,6 +55,12 @@ export function setLiveFeedURL(url) {
   });
 }
 
+export function setSensorData(sensorData) {
+  sensorsStore.setState({
+    sensorData: sensorData
+  });
+}
+
 // CAN REMOVE THIS ONE
 export function saveSensorData(sensor, type, unit) {
   let sensorData = sensorsStore.getState().sensorData;
