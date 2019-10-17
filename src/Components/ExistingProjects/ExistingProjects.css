@@ -2,7 +2,11 @@
   margin: 5px 0px;
   color: grey;
 }
-
+.Flex {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+}
 .Link:hover {
   color: black;
 }
@@ -18,16 +22,8 @@ a {
 
 .ExistingProject__Container {
   width: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.ExistingProjects__Projects {
-}
-
-.Content {
-  margin-top: 20px;
+  margin: 40px 60px;
+  max-width: 450px;
 }
 
 .ProjectName {

@@ -5,8 +5,10 @@ import {
   useProjectName
 } from "../../stores/sensors/sensorsStore";
 import { storage } from "../../firebase";
+import MySocket from "../../Components/Livestream/MySocket";
 
 import { csv } from "d3";
+import "./CurrentProject.css";
 import {
   setDatapoints,
   setSensors,
@@ -58,17 +60,20 @@ const CurrentProject = ({ match }) => {
   }, []);
 
   return (
-    <div>
-      <div>Configuration</div>
+    <div className="Container">
+      <div className="CurrentProject__Title">
+        Project: {lastLoadedProjectName}
+      </div>
       {loading && <div>Loading data...</div>}
       {projectName === undefined && lastLoadedProjectName.length === 0 && (
-        <div>NO CURRENT PROJECT </div>
+        <div>You currently have no current project selected. </div>
       )}
       {!loading && (
         <div>
-          <div>{lastLoadedProjectName}</div>
-
-          <div className="SensorsList">
+          <div className="Setup__Option">
+            Your sensors (choose one if you have not selected any):
+          </div>
+          <div className="CurrentProject__SensorsList">
             {sensorNames.map(sensor => (
               <div
                 className={currentSensor === sensor ? "SelectedSensor" : ""}
@@ -82,7 +87,7 @@ const CurrentProject = ({ match }) => {
             ))}
           </div>
           {currentSensor && (
-            <div className="CurrentSensor">
+            <div>
               <Sensor
                 sensor={currentSensor}
                 dataPoints={dataPoints}
@@ -90,6 +95,11 @@ const CurrentProject = ({ match }) => {
               />
             </div>
           )}
+        </div>
+      )}
+      {!loading && (
+        <div>
+          <MySocket />
         </div>
       )}
     </div>

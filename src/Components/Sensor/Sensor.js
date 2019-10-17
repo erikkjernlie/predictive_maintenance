@@ -32,7 +32,7 @@ const Sensor = props => {
 
   return (
     <div>
-      <h1>{props.sensor}</h1>
+      <h3>Selected sensor: {props.sensor}</h3>
       <Plot data={data} layout={layout} config={config} frames={frames} />
     </div>
   );

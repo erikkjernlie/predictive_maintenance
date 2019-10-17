@@ -3,11 +3,7 @@ import ExistingProjects from "../../Components/ExistingProjects/ExistingProjects
 import "./Dashboard.css";
 
 const Dashboard = props => {
-  return (
-    <div className="Dashboard__container">
-      <ExistingProjects />
-    </div>
-  );
+  return <ExistingProjects />;
 };
 
 export default Dashboard;

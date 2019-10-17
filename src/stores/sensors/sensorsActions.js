@@ -39,6 +39,14 @@ export function setProjectName(projectName) {
   });
 }
 
+export function createProjectName(projectName) {
+  let sensorData = sensorsStore.getState().sensorData;
+  sensorData["projectName"] = projectName;
+  sensorsStore.setState({
+    sensorData: sensorData
+  });
+}
+
 export function setLiveFeedURL(url) {
   let sensorData = sensorsStore.getState().sensorData;
   sensorData["URLtoLiveFeed"] = url;

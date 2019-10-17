@@ -12,7 +12,7 @@ import {
   setDatapoints,
   setSensors,
   setLiveFeedURL,
-  setProjectName,
+  createProjectName,
   setConfig
 } from "../../stores/sensors/sensorsActions";
 import { min } from "simple-statistics";
@@ -24,10 +24,15 @@ const ProjectSetup = props => {
 
   const [uploading, setUploading] = useState(false);
   const [sensorNames, setSensorNames] = useState([]);
+  const [selectedDataset, setSelectedDataset] = useState(false);
+  const [startingTraining, setStartingTraining] = useState(true);
 
   const [hasDifferentValueRanges, setHasDifferentValueRanges] = useState(false);
   const [isComplex, setIsComplex] = useState(false);
   const [reduceTrainingTime, setReduceTrainingTime] = useState(false);
+
+  const [lastStep, setLastStep] = useState(false);
+  const [step2, setStep2] = useState(false);
 
   const sensorData = useSensorData();
 
@@ -35,17 +40,19 @@ const ProjectSetup = props => {
 
   const handleProjectName = e => {
     if (e.target.value) {
-      setProjectName(e.target.value);
+      createProjectName(e.target.value);
     }
   };
 
   const handleURL = e => {
     if (e.target.value) {
       setLiveFeedURL(e.target.value);
+      setStep2(true);
     }
   };
 
   const startTraining = () => {
+    setStartingTraining(true);
     console.log("start training with sensor data", sensorData);
     handleUpload();
   };
@@ -55,12 +62,14 @@ const ProjectSetup = props => {
     if (file !== null) {
       console.log(file);
       csv(file.name).then(data => {
+        setSelectedDataset(true);
+
         let sensorNames = Object.keys(data[0]);
         setDatapoints(data);
         console.log(sensorNames);
         setSensorNames(sensorNames);
         setSensors(sensorNames);
-        setProjectName(projectName);
+        createProjectName(projectName);
         console.log("MIN", min(data.map(point => point["Load"])));
       });
     }
@@ -176,64 +185,85 @@ const ProjectSetup = props => {
     <div className="Container">
       <div className="NewProject">Create new project</div>
       <div className="Project">
-        <div className="Option">Option 1: Upload dataset (.csv)</div>
-        <div className="ProjectName">
-          Choose a name for the project and upload dataset (.csv)
+        <div className="Setup__Option">
+          Step 1: Choose a name for the project and set an URL for livefeed data
         </div>
+        <div className="ProjectName">Choose a name for the project</div>
         <input onChange={handleProjectName} />
-        <div className="ProjectName">Set a URL for livefeedData</div>
+        <div className="ProjectName">Set an URL for livefeed data</div>
         <input onChange={handleURL} />
-        {uploading && file && <progress value={progress} max="100" />}
-        <br />
-        <input type="file" onChange={handleChange} />
-        <button onClick={selectDataset}>Load dataset</button>
-        <React.Fragment>
-          <div className="NewProject__description">
-            Choose values for sensors
-          </div>
-          <table>
-            <tbody>
-              <tr>
-                <th>Sensor </th>
-                <th>Input</th>
-                <th>output</th>
-                <th>internal sensor</th>
-                <th>Unit</th>
-              </tr>
-              {sensorNames &&
-                sensorNames.map(sensor => (
-                  <AddSensor key={sensor} sensor={sensor} />
-                ))}
-            </tbody>
-          </table>
-        </React.Fragment>
-        <div>
+        {step2 && (
           <div>
-            Do the columns in the dataset have very different value ranges?
+            <div className="Setup__Option">Step 2: Upload dataset (.csv)</div>
+            <div className="ProjectName">Choose your file </div>
+            <div className="UploadDataset">
+              <input type="file" onChange={handleChange} />
+              <button onClick={selectDataset}>Use dataset</button>
+            </div>
+            {false && uploading && file && (
+              <progress value={progress} max="100" />
+            )}
           </div>
-          <Checkbox
-            checked={hasDifferentValueRanges}
-            onClick={() => changeDatasetFact("hasDifferentValueRanges")}
-          />
-        </div>
-        <div>
-          <div>Is the very dataset very complex?</div>
-          <Checkbox
-            checked={isComplex}
-            onClick={() => changeDatasetFact("isComplex")}
-          />
-        </div>
-        <div>
+        )}
+        {selectedDataset && (
+          <React.Fragment>
+            <div className="Setup__Option">
+              Step 3: Choose values for sensors
+            </div>
+            <table>
+              <tbody>
+                <tr>
+                  <th className="TableField">Sensor </th>
+                  <th className="TableField">Input</th>
+                  <th className="TableField">output</th>
+                  <th className="TableField">internal sensor</th>
+                  <th className="TableField">Unit</th>
+                </tr>
+                {sensorNames &&
+                  sensorNames.map(sensor => (
+                    <AddSensor key={sensor} sensor={sensor} />
+                  ))}
+              </tbody>
+            </table>
+            <button onClick={() => setLastStep(true)}>Set sensors</button>
+          </React.Fragment>
+        )}
+        {lastStep && (
           <div>
-            Do you want to reduce the training time by discarding covariant
-            features?
+            <div className="Setup__Option">Step 4: Describe your dataset</div>
+            <div className="Setup__ProjectName">
+              <div>
+                Do the columns in the dataset have very different value ranges?
+              </div>
+              <Checkbox
+                color="default"
+                checked={hasDifferentValueRanges}
+                onClick={() => changeDatasetFact("hasDifferentValueRanges")}
+              />
+            </div>
+            <div className="Setup__ProjectName">
+              <div>Is the very dataset very complex?</div>
+              <Checkbox
+                color="default"
+                checked={isComplex}
+                onClick={() => changeDatasetFact("isComplex")}
+              />
+            </div>
+            <div className="Setup__ProjectName">
+              <div>
+                Do you want to reduce the training time by discarding covariant
+                features?
+              </div>
+              <Checkbox
+                color="default"
+                checked={reduceTrainingTime}
+                onClick={() => changeDatasetFact("reduceTrainingTime")}
+              />
+            </div>
+            <button onClick={startTraining}>Start training your model</button>
+            {startingTraining && <div>Loading...</div>}
           </div>
-          <Checkbox
-            checked={reduceTrainingTime}
-            onClick={() => changeDatasetFact("reduceTrainingTime")}
-          />
-        </div>
-        <button onClick={startTraining}>Continue to train model</button>
+        )}
       </div>
     </div>
   );
