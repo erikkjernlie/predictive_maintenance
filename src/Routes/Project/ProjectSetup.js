@@ -25,7 +25,7 @@ const ProjectSetup = props => {
   const [uploading, setUploading] = useState(false);
   const [sensorNames, setSensorNames] = useState([]);
   const [selectedDataset, setSelectedDataset] = useState(false);
-  const [startingTraining, setStartingTraining] = useState(true);
+  const [startingTraining, setStartingTraining] = useState(false);
 
   const [hasDifferentValueRanges, setHasDifferentValueRanges] = useState(false);
   const [isComplex, setIsComplex] = useState(false);
