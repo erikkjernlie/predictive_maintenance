@@ -1,4 +1,6 @@
 import sensorsStore from "./sensorsStore";
+import { storage } from "../../firebase";
+import { csv } from "d3";
 
 export function setSensors(sensorNames) {
   sensorsStore.setState({
@@ -12,7 +14,32 @@ export function setDatapoints(dataPoints) {
   });
 }
 
+export function setConfig(variable, value) {
+  let sensorData = sensorsStore.getState().sensorData;
+  sensorData[variable] = value;
+  sensorsStore.setState({
+    sensorData: sensorData
+  });
+}
+
 export function setProjectName(projectName) {
+  let sensorData = sensorsStore.getState().sensorData;
+
+  const downloadRef = storage.ref(`${projectName}/data.csv`);
+  downloadRef.getDownloadURL().then(url => {
+    csv(url).then(data => {
+      let sensorNames = Object.keys(data[0]);
+      setSensors(sensorNames);
+      setDatapoints(data);
+    });
+  });
+  sensorData["projectName"] = projectName;
+  sensorsStore.setState({
+    sensorData: sensorData
+  });
+}
+
+export function createProjectName(projectName) {
   let sensorData = sensorsStore.getState().sensorData;
   sensorData["projectName"] = projectName;
   sensorsStore.setState({

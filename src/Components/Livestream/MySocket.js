@@ -129,7 +129,7 @@ class MySocket extends Component {
   render() {
     return (
       <div>
-        <div>SOCKET HERE</div>
+        <h4>Livestream data:</h4>
         <PlotIt dataPoints={[{ y: this.state.data }]} />
       </div>
     );

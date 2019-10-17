@@ -87,50 +87,14 @@ const Sensors = props => {
 
   return (
     <div className="Sensors">
-      {/*<div>
-        {models.map(model => (
-          <div>
-            {
-              model
-                .predict(tf.tensor2d([[7.207286, 1.844344]], [1, 2]))
-                .dataSync()[0]
-            }
-            ;
-          </div>
-        ))}
-        </div>*/}
       <div>
-        <div>
-          <h4>Loss</h4>
-          <div className="canvases" id="lossCanvas"></div>
-        </div>
-        <div>
-          <h4>Accuracy</h4>
-          <div className="canvases" id="accuracyCanvas"></div>
-        </div>
+        <h4>Loss</h4>
+        <div className="canvases" id="lossCanvas"></div>
       </div>
-      {/*<div className="SensorsList">
-        {sensors.map(sensor => (
-          <div
-            className={currentSensor === sensor ? "SelectedSensor" : ""}
-            onClick={() => {
-              setCurrentSensor(sensor);
-            }}
-          >
-            {sensor}
-          </div>
-        ))}
+      <div>
+        <h4>Accuracy</h4>
+        <div className="canvases" id="accuracyCanvas"></div>
       </div>
-      {currentSensor && (
-        <div className="CurrentSensor">
-          <Sensor
-            sensor={currentSensor}
-            dataPoints={dataPoints}
-            sensors={sensors}
-          />
-        </div>
-      )}
-      */}
     </div>
   );
 };
