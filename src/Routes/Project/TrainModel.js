@@ -27,18 +27,15 @@ import {
 
 import { storage } from "../../firebase";
 
-const modelData = {
-  name: "MyProject",
-  url: "www.myProject.com",
-  sensors: {
-    inputs: ["sepal.length", "sepal.width", "petal.length"],
-    outputs: ["petal.width"]
-  },
-  config: {
-    hasDifferentValueRanges: false,
-    isComplex: false,
-    reduceTrainingTime: false
-  }
+let modelData = {
+  projectName: "MyProject",
+  URLtoLiveFeed: "www.myProject.com",
+  input: [],
+  output: [],
+  internal: [],
+  hasDifferentValueRanges: false,
+  isComplex: false,
+  reduceTrainingTime: false
 };
 
 // 1. "My dataset has columns with very different value ranges" --> true: standardization, false: normalzation
@@ -65,6 +62,16 @@ const TrainModel = ({ match }) => {
   const [dataPoints, setDatapoints] = useState([]);
 
   useEffect(() => {
+    const downloadRef2 = storage.ref(`${projectName}/sensorData.json`);
+    downloadRef2.getDownloadURL().then(url => {
+      fetch(url).then(response => response.json()).then(jsonData => {
+      console.log(modelData)
+      modelData = jsonData;
+      console.log(jsonData)
+      console.log(modelData)
+    })
+      
+    })
     const uploadTask = storage.ref(`${projectName}/data.csv`);
     uploadTask.getDownloadURL().then(url => {
       csv(url).then(data => {
@@ -74,11 +81,12 @@ const TrainModel = ({ match }) => {
         train(data);
       });
     });
+    
   }, []);
 
   function getFeatureTargetSplit(data) {
-    const feats = modelData.sensors.inputs.concat(modelData.sensors.internal);
-    const targs = modelData.sensors.outputs;
+    const feats = modelData.input.concat(modelData.internal);
+    const targs = modelData.output;
     let features = JSON.parse(JSON.stringify(data));
     let targets = JSON.parse(JSON.stringify(data));
     feats.forEach(feat => targets.forEach(x => delete x[feat]));
@@ -115,10 +123,10 @@ const TrainModel = ({ match }) => {
     console.log("features", features);
     console.log("targets", targets);
     console.log("Covariance matrix", getCovarianceMatrix(features));
-    if (modelData.config.reduce) {
+    if (modelData.reduceTrainingTime) {
       //features = discardCovariantColumns(features)
     }
-    if (modelData.config.hasDifferentValueRanges) {
+    if (modelData.hasDifferentValueRanges) {
       features = standardizeData(features);
     } else {
       features = normalizeData(features);
@@ -194,7 +202,7 @@ const TrainModel = ({ match }) => {
     console.log("xtrain shape", xTrain.shape[1]);
     // Define the topology of the model: two dense layers.
     let model;
-    if (modelData.config.isComplex) {
+    if (modelData.isComplex) {
       model = getComplexModel(xTrain.shape[1]);
     } else {
       model = getBasicModel(xTrain.shape[1]);

@@ -117,7 +117,7 @@ const ProjectSetup = props => {
       () => {
         // complete function ....
 
-        const blob = new Blob([fileData], { type: "text/plain" });
+        const blob = new Blob([fileData], { type: "application/json" });
 
         const uploadTask2 = storage
           .ref(`${projectName}/sensorData.json`)
