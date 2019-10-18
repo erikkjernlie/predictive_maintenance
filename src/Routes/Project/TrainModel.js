@@ -7,17 +7,7 @@ import {
 import "./TrainModel.css";
 import Sensor from "../../Components/Sensor/Sensor";
 import { Link } from "react-router-dom";
-import {
-  shuffle,
-  sampleCovariance,
-  max,
-  min,
-  sum,
-  mean,
-  standardDeviation,
-  sampleStandardDeviation,
-  sampleCorrelation
-} from "simple-statistics";
+import { shuffle } from "simple-statistics";
 
 import { csv } from "d3";
 
@@ -31,9 +21,35 @@ import {
   standardizeData,
   getCovarianceMatrix,
   getDatasetByColumns,
-  discardCovariantColumns
+  discardCovariantColumns,
+  shuffleData
 } from "./statisticsLib.js";
+
 import { storage } from "../../firebase";
+
+let modelData = {
+  projectName: "MyProject",
+  URLtoLiveFeed: "www.myProject.com",
+  input: [],
+  output: [],
+  internal: [],
+  hasDifferentValueRanges: false,
+  isComplex: false,
+  reduceTrainingTime: false
+};
+
+// 1. "My dataset has columns with very different value ranges" --> true: standardization, false: normalzation
+// 2. "My dataset is very complex" --> true: flere/bredere lag, false: standard modell
+// 3. "I want to reduce training time by discarding covariant features" --> true: discardColumns, false: ikke
+
+const modelParams = {
+  test_train_split: 0.2,
+  activation: "relu",
+  learningRate: 0.01,
+  epochs: 20,
+  optimizer: tf.train.adam(0.01),
+  loss: "meanSquaredError"
+};
 
 const TrainModel = ({ match }) => {
   const models = useModels();
@@ -53,22 +69,36 @@ const TrainModel = ({ match }) => {
       console.log("feks", data);
 
       train(data);
-    });
+      const downloadRef2 = storage.ref(`${projectName}/sensorData.json`);
+      downloadRef2.getDownloadURL().then(url => {
+        fetch(url)
+          .then(response => response.json())
+          .then(jsonData => {
+            console.log(modelData);
+            modelData = jsonData;
+            console.log(jsonData);
+            console.log(modelData);
+          });
+      });
+      const uploadTask = storage.ref(`${projectName}/data.csv`);
+      uploadTask.getDownloadURL().then(url => {
+        csv(url).then(data => {
+          setSensorNames(Object.keys(data[0]));
+          setDatapoints(data);
+          console.log("data", data);
+          train(data);
+        });
+      });
+    }, []);
+  });
 
-    /*
-    const dataset = tf.data.csv(
-      "https://firebasestorage.googleapis.com/v0/b/tpk4450-project.appspot.com/o/rig_good.csv?alt=media&token=9792ce1c-7196-4a0d-80c2-f83ad35d7744"
-    );
-    const dataset2 = tf.data.csv("./rig_good.csv");
-    console.log("TF DATA", dataset2);
-    */
-  }, []);
-
-  function getFeatureTargetSplit(dataset) {
-    const numberOfColumns = Object.keys(dataset[0]).length;
-
-    const features = dataset.map(x => x.slice(0, numberOfColumns - 1));
-    const targets = dataset.map(x => x.slice(numberOfColumns - 1));
+  function getFeatureTargetSplit(data) {
+    const feats = modelData.input.concat(modelData.internal);
+    const targs = modelData.output;
+    let features = JSON.parse(JSON.stringify(data));
+    let targets = JSON.parse(JSON.stringify(data));
+    feats.forEach(feat => targets.forEach(x => delete x[feat]));
+    targs.forEach(targ => features.forEach(x => delete x[targ]));
     return [features, targets];
   }
 
@@ -94,66 +124,102 @@ const TrainModel = ({ match }) => {
   }
 
   async function train(data) {
-    let dataset = data.map(x => Object.values(x).map(Number));
-    dataset = shuffle(dataset);
-    const test_train_split = 0.2;
-    //console.log("Data before discarding column", dataset);
-    //console.log("Covariance matrix", getCovarianceMatrix(dataset));
-    dataset = discardCovariantColumns(dataset, getCovarianceMatrix(dataset));
-    const [features, targets] = getFeatureTargetSplit(dataset);
-    const normalizedFeatures = normalizeData(features);
-    const standardizedFeatures = standardizeData(features);
+    data = shuffleData(data);
+    let [features, targets] = getFeatureTargetSplit(data);
+    features = features.map(x => Object.values(x).map(y => Number(y)));
+    targets = targets.map(x => Object.values(x).map(y => Number(y)));
+    console.log("features", features);
+    console.log("targets", targets);
+    console.log("Covariance matrix", getCovarianceMatrix(features));
+    if (modelData.reduceTrainingTime) {
+      //features = discardCovariantColumns(features)
+    }
+    if (modelData.hasDifferentValueRanges) {
+      features = standardizeData(features);
+    } else {
+      features = normalizeData(features);
+    }
+    console.log("features_reduced_normalized", features);
     const [x_train, x_test, y_train, y_test] = getTestTrainSplit(
-      standardizedFeatures,
+      features,
       targets,
-      test_train_split
+      modelParams.test_train_split
     );
     const tensors = convertToTensors(x_train, x_test, y_train, y_test);
     //console.log("x train", x_train);
     //console.log("x test", x_test);
     //console.log("y train", y_train);
     //console.log("y test", y_test);
+    let r2 = -1000;
+    let model;
+    let predictions;
+    while (r2 < 0.8) {
+      model = await trainModel(
+        tensors.trainFeatures,
+        tensors.trainTargets,
+        tensors.testFeatures,
+        tensors.testTargets
+      );
+      predictions = model.predict(tensors.testFeatures);
+      //console.log("PREDICT", predictions);
+      r2 = getR2Score(predictions.arraySync(), y_test).rSquared;
+      console.log("R2 score: ", r2);
+    }
+  }
 
-    const model = await trainModel(
-      tensors.trainFeatures,
-      tensors.trainTargets,
-      tensors.testFeatures,
-      tensors.testTargets
+  function getBasicModel(inputSize) {
+    const model = tf.sequential();
+    model.add(
+      tf.layers.dense({
+        units: 10,
+        activation: modelParams.activation,
+        inputShape: [inputSize]
+      })
     );
-    const predictions = model.predict(tensors.testFeatures);
-    //console.log("PREDICT", predictions);
-    //console.log("R2 score: ", getR2Score(predictions.arraySync(), y_test));
+    model.add(
+      tf.layers.dense({ units: 1, activation: modelParams.activation })
+    );
+    return model;
+  }
+
+  function getComplexModel(inputSize) {
+    const model = tf.sequential();
+    model.add(
+      tf.layers.dense({
+        units: 10,
+        activation: modelParams.activation,
+        inputShape: [inputSize]
+      })
+    );
+    model.add(
+      tf.layers.dense({
+        units: 5,
+        activation: modelParams.activation
+      })
+    );
+    model.add(
+      tf.layers.dense({ units: 1, activation: modelParams.activation })
+    );
+    return model;
   }
 
   async function trainModel(xTrain, yTrain, xTest, yTest) {
     // console.log("Start training");
     // const params = ui.loadTrainParametersFromUI();
 
+    console.log("xtrain shape", xTrain.shape[1]);
     // Define the topology of the model: two dense layers.
-    const model = tf.sequential();
-    model.add(
-      tf.layers.dense({
-        units: 10,
-        activation: "relu",
-        inputShape: [xTrain.shape[1]]
-      })
-    );
-    model.add(
-      tf.layers.dense({
-        units: 5,
-        activation: "relu"
-      })
-    );
-    model.add(tf.layers.dense({ units: 1, activation: "relu" }));
+    let model;
+    if (modelData.isComplex) {
+      model = getComplexModel(xTrain.shape[1]);
+    } else {
+      model = getBasicModel(xTrain.shape[1]);
+    }
     model.summary();
 
-    // learningrate
-    const learningRate = 0.01;
-    const epochs = 2;
-    const optimizer = tf.train.adam(learningRate);
     model.compile({
-      optimizer: optimizer,
-      loss: "meanSquaredError"
+      optimizer: modelParams.optimizer,
+      loss: modelParams.loss
     });
 
     const trainLogs = [];
@@ -165,46 +231,32 @@ const TrainModel = ({ match }) => {
     const beginMs = performance.now();
     // Call `model.fit` to train the model.
     const history = await model.fit(xTrain, yTrain, {
-      epochs: epochs,
+      epochs: modelParams.epochs,
       validationData: [xTest, yTest],
       callbacks: callbacks
     });
-    console.log("PREDICTING");
 
-    // 1261.0421142578125,27.090818405151367,4.955190658569336
-
-    /*model
-      .predict(tf.tensor2d([[1261.0421142578125, 27.090818405151367]], [1, 2]))
-      .print();*/
-
-    console.log("START UPLOADING");
-
-    /*
-    const blob = new Blob([model], { type: "multipart/form-data" });
-
-    const ref = storage.ref(`${projectName}/model/`);
-    const uploadTask2 = storage
-      .ref(`${projectName}`)
-      .put(blob)
-      .then(() => {
-        console.log("UPLOADED");
-      });
-      */
-
-    // await model.save(ref.bucket + "/" + ref.fullPath);
     await model.save("indexeddb://" + projectName + "/model").then(() => {
-      // model saved in indexeddb
-      // can easily be loaded again
+      console.log("Model saved to indexeddb");
     });
 
-    //model
-    //.predict(tf.tensor2d([[1.0, 4.0, 2.0]], [1, 3]))
-    //.print();
+    console.log("Loading model");
+    const loadedModel = await tf.loadLayersModel(
+      "indexeddb://" + projectName + "/model"
+    );
+    console.log("Saved model", model);
+    console.log("Loaded model", loadedModel);
+    console.log(
+      "Saved prediction",
+      model.predict(tf.tensor2d([[2.0, 2.0]], [1, xTrain.shape[1]])).print()
+    );
+    console.log(
+      "Loaded prediction",
+      loadedModel
+        .predict(tf.tensor2d([[2.0, 2.0]], [1, xTrain.shape[1]]))
+        .print()
+    );
 
-    // SAVE MODEL TO FIRESTORE AND TO STORE IN APPLICATION SO IT CAN PREDICT ELSEWHERE
-
-    // model.predict(tf.tensor2d([[5.1111, 3.50004, 1.4303]], [1, 3])).print();
-    // nconst secPerEpoch = (performance.now() - beginMs) / (1000 * epochs);
     return model;
   }
 

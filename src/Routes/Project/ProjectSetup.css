@@ -1,0 +1,44 @@
+.Container {
+  display: flex;
+  width: 100%;
+  max-width: 650px;
+  flex-direction: column;
+  margin: 40px 60px;
+}
+
+.Project {
+  display: flex;
+  flex-direction: column;
+}
+
+.NewProject {
+  font-size: 24px;
+}
+
+.Title {
+  text-align: center;
+  font-size: 16px;
+}
+
+.Setup__Option {
+  color: #2963f6;
+  font-size: 17px;
+  margin-top: 18px;
+}
+
+th {
+  color: black;
+}
+
+.Setup__ProjectName {
+  font-size: 14px;
+  color: grey;
+  display: flex;
+  justify-content: space-between;
+}
+
+button:hover {
+  background-color: lightgray;
+  color: white;
+  cursor: pointer;
+}
