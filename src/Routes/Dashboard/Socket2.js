@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-const URL = "ws://169.254.109.234:1337";
+const URL = "ws://tvilling.digital:1337";
 
 const Socket2 = props => {
   useEffect(() => {}, []);

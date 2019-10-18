@@ -7,7 +7,8 @@ import {
   fetchAuthCookie
 } from "../../stores/models/modelsActions";
 
-const URL = "ws://169.254.109.234:1337";
+// const URL = "ws://169.254.109.234:1337";
+const URL = "ws://tvilling.digital:1337";
 
 class MySocket extends Component {
   ws = new WebSocket(URL);
@@ -20,6 +21,16 @@ class MySocket extends Component {
     data: [],
     selectedSources: [],
     subscribedSources: {
+      "0001": {
+        byteFormat: "<HHIdddddddddddd",
+        name: "testrig",
+        channels: [
+          {
+            id: 1,
+            name: "Load [N]"
+          }
+        ]
+      },
       "0000": {
         byteFormat: "<HHIdddddddddddd",
         name: "testrig",
@@ -124,14 +135,12 @@ class MySocket extends Component {
     };
 
     this.ws.onmessage = evt => {
-      console.log("MESSAGE", evt);
       // on receiving a message, add it to the list of messages
       if (evt.data.byteLength > 0) {
         const data = evt.data;
         let decoder = new TextDecoder("utf-8");
 
         const sourceID = decoder.decode(new Uint8Array(data, 0, 4));
-        console.log("SOURCEID", sourceID);
         this.parseData(data.slice(4), sourceID);
       } else {
         console.log("pong"); // why pong?
@@ -177,9 +186,9 @@ class MySocket extends Component {
         sourceBuffer.y_buffer[channelID].push(unpacked[channelID + 1]);
       });
       unpacked = unpackIterator.next().value;
-      // console.log("UNPACKED", unpacked);
       if (unpacked && unpacked.length > 0) {
         const data = this.state.data.concat(unpacked[9]);
+        console.log(data);
         this.setState({
           data: data
         });

@@ -1,7 +1,7 @@
 import modelsStore from "./modelsStore";
 import * as tf from "@tensorflow/tfjs";
 
-export const rootAPI = "http://169.254.109.234:1337";
+export const rootAPI = "http://tvilling.digital:1337";
 
 export function fetchModels() {
   console.log("MODELS");
@@ -43,7 +43,7 @@ export async function subscribeToSource(sourceId) {
 }
 
 export async function fetchAuthCookie() {
-  await fetch("http://169.254.109.234:1337" + "/session", {
+  await fetch("http://tvilling.digital:1337" + "/session", {
     credentials: "include"
   });
 }
