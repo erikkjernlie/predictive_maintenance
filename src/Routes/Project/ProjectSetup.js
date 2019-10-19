@@ -4,6 +4,7 @@ import "./ProjectSetup.css";
 import { setTimeout } from "timers";
 import { csv } from "d3";
 import AddSensor from "../../Components/Sensor/AddSensor";
+import CSVReader from "react-csv-reader";
 import {
   useSensorData,
   useProjectName
@@ -57,8 +58,23 @@ const ProjectSetup = props => {
     handleUpload();
   };
 
-  const selectDataset = () => {
-    console.log(file);
+  const selectDataset2 = data => {
+    console.log(data);
+    setSelectedDataset(true);
+    let sensorNames = data[0];
+    setDatapoints(data);
+    console.log(sensorNames);
+    setSensorNames(sensorNames);
+    setSensors(sensorNames);
+    createProjectName(projectName);
+    let tryingStuff = data.map(x => x.join(","))
+    let tryingStuff2 = tryingStuff.join("\n")
+    console.log("trying stuff", tryingStuff)
+    console.log(tryingStuff2)
+    setFile(tryingStuff2)
+  }
+
+  const selectDataset = data => {
     if (file !== null) {
       console.log(file);
       csv(file.name).then(data => {
@@ -95,13 +111,15 @@ const ProjectSetup = props => {
   };
 
   const handleUpload = () => {
-    if (file === null || projectName.length === 0) {
+    /*if (file === null || projectName.length === 0) {
       return;
-    }
+    }*/
     setUploading(true);
     const fileData = JSON.stringify(sensorData);
     console.log("HERE COMES THE FILEDATA", fileData);
-    const uploadTask = storage.ref(`${projectName}/data.csv`).put(file);
+    console.log(file)
+    const csvblob = new Blob([file], {type: "application/vnd.ms-excel"})
+    const uploadTask = storage.ref(`${projectName}/data.csv`).put(csvblob);
     // observer for when the state changes, e.g. progress
     uploadTask.on(
       "state_changed",
@@ -194,6 +212,11 @@ const ProjectSetup = props => {
         <input onChange={handleURL} />
         {step2 && (
           <div>
+            <CSVReader
+              cssClass="react-csv-input"
+              label="Select CSV"
+              onFileLoaded={selectDataset2}
+            />
             <div className="Setup__Option">Step 2: Upload dataset (.csv)</div>
             <div className="ProjectName">Choose your file </div>
             <div className="UploadDataset">

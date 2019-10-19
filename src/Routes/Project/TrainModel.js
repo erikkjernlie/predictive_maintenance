@@ -62,35 +62,25 @@ const TrainModel = ({ match }) => {
   const [dataPoints, setDatapoints] = useState([]);
 
   useEffect(() => {
-    csv("/iris_mod_extended.csv").then(data => {
-      let sensorNames = Object.keys(data[0]);
-      setSensorNames(sensorNames);
-      setDatapoints(data);
-      console.log("feks", data);
-
-      train(data);
-      const downloadRef2 = storage.ref(`${projectName}/sensorData.json`);
-      downloadRef2.getDownloadURL().then(url => {
-        fetch(url)
-          .then(response => response.json())
-          .then(jsonData => {
-            console.log(modelData);
-            modelData = jsonData;
-            console.log(jsonData);
-            console.log(modelData);
-          });
-      });
-      const uploadTask = storage.ref(`${projectName}/data.csv`);
-      uploadTask.getDownloadURL().then(url => {
-        csv(url).then(data => {
-          setSensorNames(Object.keys(data[0]));
-          setDatapoints(data);
-          console.log("data", data);
-          train(data);
+    const downloadRef2 = storage.ref(`${projectName}/sensorData.json`);
+    downloadRef2.getDownloadURL().then(url => {
+      fetch(url)
+        .then(response => response.json())
+        .then(jsonData => {
+          modelData = jsonData;
+          console.log("modelData", modelData);
         });
+    });
+    const uploadTask = storage.ref(`${projectName}/data.csv`);
+    uploadTask.getDownloadURL().then(url => {
+      csv(url).then(data => {
+        setSensorNames(Object.keys(data[0]));
+        setDatapoints(data);
+        console.log("data", data);
+        train(data);
       });
-    }, []);
-  });
+    });
+  }, []);
 
   function getFeatureTargetSplit(data) {
     const feats = modelData.input.concat(modelData.internal);
@@ -139,17 +129,16 @@ const TrainModel = ({ match }) => {
     } else {
       features = normalizeData(features);
     }
-    console.log("features_reduced_normalized", features);
     const [x_train, x_test, y_train, y_test] = getTestTrainSplit(
       features,
       targets,
       modelParams.test_train_split
     );
     const tensors = convertToTensors(x_train, x_test, y_train, y_test);
-    //console.log("x train", x_train);
-    //console.log("x test", x_test);
-    //console.log("y train", y_train);
-    //console.log("y test", y_test);
+    console.log("trainFeatures", tensors.trainFeatures);
+    console.log("testFeatures", tensors.testFeatures)
+    console.log("trainTargets", tensors.trainTargets)
+    console.log("testTargets", tensors.testTargets)
     let r2 = -1000;
     let model;
     let predictions;
@@ -167,7 +156,8 @@ const TrainModel = ({ match }) => {
     }
   }
 
-  function getBasicModel(inputSize) {
+  function getBasicModel(inputSize, outputSize) {
+    console.log("inputsize", inputSize, outputSize)
     const model = tf.sequential();
     model.add(
       tf.layers.dense({
@@ -177,12 +167,12 @@ const TrainModel = ({ match }) => {
       })
     );
     model.add(
-      tf.layers.dense({ units: 1, activation: modelParams.activation })
+      tf.layers.dense({ units: outputSize, activation: modelParams.activation })
     );
     return model;
   }
 
-  function getComplexModel(inputSize) {
+  function getComplexModel(inputSize, outputSize) {
     const model = tf.sequential();
     model.add(
       tf.layers.dense({
@@ -198,7 +188,7 @@ const TrainModel = ({ match }) => {
       })
     );
     model.add(
-      tf.layers.dense({ units: 1, activation: modelParams.activation })
+      tf.layers.dense({ units: outputSize, activation: modelParams.activation })
     );
     return model;
   }
@@ -211,9 +201,9 @@ const TrainModel = ({ match }) => {
     // Define the topology of the model: two dense layers.
     let model;
     if (modelData.isComplex) {
-      model = getComplexModel(xTrain.shape[1]);
+      model = getComplexModel(xTrain.shape[1], yTrain.shape[1]);
     } else {
-      model = getBasicModel(xTrain.shape[1]);
+      model = getBasicModel(xTrain.shape[1], yTrain.shape[1]);
     }
     model.summary();
 
@@ -248,12 +238,12 @@ const TrainModel = ({ match }) => {
     console.log("Loaded model", loadedModel);
     console.log(
       "Saved prediction",
-      model.predict(tf.tensor2d([[2.0, 2.0]], [1, xTrain.shape[1]])).print()
+      model.predict(tf.tensor2d([[2.0, 2.0, 2.0]], [1, xTrain.shape[1]])).print()
     );
     console.log(
       "Loaded prediction",
       loadedModel
-        .predict(tf.tensor2d([[2.0, 2.0]], [1, xTrain.shape[1]]))
+        .predict(tf.tensor2d([[2.0, 2.0, 2.0]], [1, xTrain.shape[1]]))
         .print()
     );
 
