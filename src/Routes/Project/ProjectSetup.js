@@ -58,70 +58,24 @@ const ProjectSetup = props => {
     handleUpload();
   };
 
-  const selectDataset2 = data => {
-    console.log(data);
+  const selectDataset = data => {
     setSelectedDataset(true);
     let sensorNames = data[0];
     setDatapoints(data);
-    console.log(sensorNames);
     setSensorNames(sensorNames);
     setSensors(sensorNames);
     createProjectName(projectName);
-    let tryingStuff = data.map(x => x.join(","))
-    let tryingStuff2 = tryingStuff.join("\n")
-    console.log("trying stuff", tryingStuff)
-    console.log(tryingStuff2)
-    setFile(tryingStuff2)
+    let rows_joined = data.map(x => x.join(","))
+    let csvstr = rows_joined.join("\n")
+    setFile(csvstr)
   }
 
-  const selectDataset = data => {
-    if (file !== null) {
-      console.log(file);
-      csv(file.name).then(data => {
-        setSelectedDataset(true);
-
-        let sensorNames = Object.keys(data[0]);
-        setDatapoints(data);
-        console.log(sensorNames);
-        setSensorNames(sensorNames);
-        setSensors(sensorNames);
-        createProjectName(projectName);
-        console.log("MIN", min(data.map(point => point["Load"])));
-      });
-    }
-  };
-
-  const handleChange = e => {
-    if (e.target.files[0]) {
-      const file = e.target.files[0];
-      // setFile(file) ??
-      setFile(file);
-    }
-  };
-
-  const handleChangeMultiple = e => {
-    if (e.target.files[0]) {
-      const file1 = e.target.files[0];
-      setFile(file1);
-    }
-    if (e.target.files[1]) {
-      const file2 = e.target.files[1];
-      setFile(file2);
-    }
-  };
-
   const handleUpload = () => {
-    /*if (file === null || projectName.length === 0) {
-      return;
-    }*/
     setUploading(true);
     const fileData = JSON.stringify(sensorData);
-    console.log("HERE COMES THE FILEDATA", fileData);
-    console.log(file)
     const csvblob = new Blob([file], {type: "application/vnd.ms-excel"})
-    const uploadTask = storage.ref(`${projectName}/data.csv`).put(csvblob);
-    // observer for when the state changes, e.g. progress
-    uploadTask.on(
+    const uploadTaskData = storage.ref(`${projectName}/data.csv`).put(csvblob);
+    uploadTaskData.on(
       "state_changed",
       snapshot => {
         const progress = Math.round(
@@ -135,13 +89,10 @@ const ProjectSetup = props => {
       () => {
         // complete function ....
 
-        const blob = new Blob([fileData], { type: "application/json" });
-
-        const uploadTask2 = storage
-          .ref(`${projectName}/sensorData.json`)
-          .put(blob);
+        const configblob = new Blob([fileData], { type: "application/json" });
+        const uploadTaskConfig = storage.ref(`${projectName}/sensorData.json`).put(configblob);
         // observer for when the state changes, e.g. progress
-        uploadTask2.on(
+        uploadTaskConfig.on(
           "state_changed",
           snapshot => {
             const progress = Math.round(
@@ -172,7 +123,6 @@ const ProjectSetup = props => {
             }, 500);
           }
         );
-        // done uploading
       }
     );
   };
@@ -185,14 +135,11 @@ const ProjectSetup = props => {
         break;
       case "isComplex":
         setConfig("isComplex", !isComplex);
-
         setIsComplex(!isComplex);
-
         break;
       case "hasDifferentValueRanges":
         setConfig("hasDifferentValueRanges", !hasDifferentValueRanges);
         setHasDifferentValueRanges(!hasDifferentValueRanges);
-
         break;
       default:
         break;
@@ -212,20 +159,12 @@ const ProjectSetup = props => {
         <input onChange={handleURL} />
         {step2 && (
           <div>
-            <CSVReader
-              cssClass="react-csv-input"
-              label="Select CSV"
-              onFileLoaded={selectDataset2}
-            />
             <div className="Setup__Option">Step 2: Upload dataset (.csv)</div>
             <div className="ProjectName">Choose your file </div>
-            <div className="UploadDataset">
-              <input type="file" onChange={handleChange} />
-              <button onClick={selectDataset}>Use dataset</button>
-            </div>
-            {false && uploading && file && (
-              <progress value={progress} max="100" />
-            )}
+            <CSVReader
+              cssClass="react-csv-input"
+              onFileLoaded={selectDataset}
+            />
           </div>
         )}
         {selectedDataset && (

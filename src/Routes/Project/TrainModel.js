@@ -61,9 +61,9 @@ const TrainModel = ({ match }) => {
   const [sensorNames, setSensorNames] = useState([]);
   const [dataPoints, setDatapoints] = useState([]);
 
-  useEffect(() => {
-    const downloadRef2 = storage.ref(`${projectName}/sensorData.json`);
-    downloadRef2.getDownloadURL().then(url => {
+  useEffect(async () => {
+    const downloadRefConfig = storage.ref(`${projectName}/sensorData.json`);
+    await downloadRefConfig.getDownloadURL().then(url => {
       fetch(url)
         .then(response => response.json())
         .then(jsonData => {
@@ -71,8 +71,9 @@ const TrainModel = ({ match }) => {
           console.log("modelData", modelData);
         });
     });
-    const uploadTask = storage.ref(`${projectName}/data.csv`);
-    uploadTask.getDownloadURL().then(url => {
+
+    const downloadRefData = storage.ref(`${projectName}/data.csv`);
+    downloadRefData.getDownloadURL().then(url => {
       csv(url).then(data => {
         setSensorNames(Object.keys(data[0]));
         setDatapoints(data);
@@ -85,6 +86,8 @@ const TrainModel = ({ match }) => {
   function getFeatureTargetSplit(data) {
     const feats = modelData.input.concat(modelData.internal);
     const targs = modelData.output;
+    console.log("feats", feats)
+    console.log("targs", targs)
     let features = JSON.parse(JSON.stringify(data));
     let targets = JSON.parse(JSON.stringify(data));
     feats.forEach(feat => targets.forEach(x => delete x[feat]));
@@ -113,7 +116,15 @@ const TrainModel = ({ match }) => {
     return tensors;
   }
 
+  function preprocessData(data) {
+    // TODO:
+    // remove outliers
+    // remove Null-values
+    return data
+  }
+
   async function train(data) {
+    data = preprocessData(data)
     data = shuffleData(data);
     let [features, targets] = getFeatureTargetSplit(data);
     features = features.map(x => Object.values(x).map(y => Number(y)));
@@ -122,7 +133,7 @@ const TrainModel = ({ match }) => {
     console.log("targets", targets);
     console.log("Covariance matrix", getCovarianceMatrix(features));
     if (modelData.reduceTrainingTime) {
-      //features = discardCovariantColumns(features)
+      features = discardCovariantColumns(features)
     }
     if (modelData.hasDifferentValueRanges) {
       features = standardizeData(features);
@@ -230,7 +241,7 @@ const TrainModel = ({ match }) => {
       console.log("Model saved to indexeddb");
     });
 
-    console.log("Loading model");
+    /*console.log("Loading model");
     const loadedModel = await tf.loadLayersModel(
       "indexeddb://" + projectName + "/model"
     );
@@ -245,7 +256,7 @@ const TrainModel = ({ match }) => {
       loadedModel
         .predict(tf.tensor2d([[2.0, 2.0, 2.0]], [1, xTrain.shape[1]]))
         .print()
-    );
+    );*/
 
     return model;
   }
