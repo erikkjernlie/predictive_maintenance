@@ -36,7 +36,13 @@ import {
 } from "./statisticsLib.js";
 
 import { setConfig, setData, uploadData, uploadConfig } from "./transferLib.js";
-import { getFeatureTargetSplit, getTestTrainSplit, convertToTensors, getBasicModel, getComplexModel } from "./machineLearningLib.js";
+import {
+  getFeatureTargetSplit,
+  getTestTrainSplit,
+  convertToTensors,
+  getBasicModel,
+  getComplexModel
+} from "./machineLearningLib.js";
 
 let model;
 let dataPoints;
@@ -48,17 +54,15 @@ function setDataPoints(p) {
 }
 
 function setSensors(s) {
-  sensors = s
+  sensors = s;
 }
 
 function setSensorData(d) {
-  sensorData = d
+  sensorData = d;
 }
 
 async function setModel(project) {
-  model = await tf.loadLayersModel(
-    "indexeddb://" + project + "/model"
-  );
+  model = await tf.loadLayersModel("indexeddb://" + project + "/model");
 }
 
 const CurrentProject = ({ match }) => {
@@ -72,9 +76,9 @@ const CurrentProject = ({ match }) => {
   const [loading, setLoading] = useState(false);
 
   const lastLoadedProjectName = useProjectName();
-  
-  let plot_y = []
-  let plot_pred = []
+
+  let plot_y = [];
+  let plot_pred = [];
 
   function predict(dataPoint) {
     if (sensorData.hasDifferentValueRanges) {
@@ -82,14 +86,15 @@ const CurrentProject = ({ match }) => {
     } else {
       dataPoint = normalizeData(dataPoint);
     }
-    
-    const prediction = model.predict(tf.tensor2d([dataPoint], [1, dataPoint.length])).dataSync()
+
+    const prediction = model
+      .predict(tf.tensor2d([dataPoint], [1, dataPoint.length]))
+      .dataSync();
     if (prediction.length === 1) {
       return prediction[0];
     } else {
       return prediction;
     }
-
   }
 
   function doPredictions(model) {
@@ -109,7 +114,9 @@ const CurrentProject = ({ match }) => {
 
     let i = 0;
     x_real.forEach(p => {
-      let prediction = model.predict(tf.tensor2d([p], [1, p.length])).dataSync();
+      let prediction = model
+        .predict(tf.tensor2d([p], [1, p.length]))
+        .dataSync();
       console.log("pred", prediction);
       console.log("real", y_real[i]);
       plot_y.push(y_real[i]);
@@ -117,22 +124,26 @@ const CurrentProject = ({ match }) => {
       i = i + 1;
     });
 
-    console.log(plot_y)
-    console.log(plot_pred)
+    console.log(plot_y);
+    console.log(plot_pred);
   }
 
-  useEffect(async () => {
+  async function doStuff() {
     console.log("LAST LOADED", projectName);
     setLoading(true);
 
     await setConfig(projectName, setSensorData);
-    await setData(projectName, setDataPoints, setSensors)
-    console.log("dataPoints", dataPoints)
-    console.log("sensorData", sensorData)
-    console.log("sensors", sensors)
+    await setData(projectName, setDataPoints, setSensors);
+    console.log("dataPoints", dataPoints);
+    console.log("sensorData", sensorData);
+    console.log("sensors", sensors);
     await setModel(projectName);
-    setLoading(false)
-    doPredictions(model)
+    setLoading(false);
+    doPredictions(model);
+  }
+
+  useEffect(() => {
+    doStuff();
   }, []);
 
   return (
