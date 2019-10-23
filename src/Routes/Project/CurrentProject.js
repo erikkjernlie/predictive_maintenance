@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from "react";
-import {
+/*import {
   useDataPoints,
   useSensorNames,
   useProjectName,
   useSensorData
+} from "../../stores/sensors/sensorsStore";*/
+import {
+  useProjectName,
+  useSensorNames
 } from "../../stores/sensors/sensorsStore";
 import { storage } from "../../firebase";
 import MySocket from "../../Components/Livestream/MySocket";
@@ -11,12 +15,12 @@ import MySocket from "../../Components/Livestream/MySocket";
 import * as tf from "@tensorflow/tfjs";
 import { csv } from "d3";
 import "./CurrentProject.css";
-import {
+/*import {
   setDatapoints,
   setSensors,
   setProjectName,
   setSensorData
-} from "../../stores/sensors/sensorsActions";
+} from "../../stores/sensors/sensorsActions";*/
 import Sensor from "../../Components/Sensor/Sensor";
 import SingleSensor from "../../Components/Sensor/SingleSensor";
 import { Redirect } from "react-router-dom";
@@ -31,10 +35,36 @@ import {
   shuffleData
 } from "./statisticsLib.js";
 
+import { setConfig, setData, uploadData, uploadConfig } from "./transferLib.js";
+import { getFeatureTargetSplit, getTestTrainSplit, convertToTensors, getBasicModel, getComplexModel } from "./machineLearningLib.js";
+
+let model;
+let dataPoints;
+let sensors = [];
+let sensorData;
+
+function setDataPoints(p) {
+  dataPoints = p;
+}
+
+function setSensors(s) {
+  sensors = s
+}
+
+function setSensorData(d) {
+  sensorData = d
+}
+
+async function setModel(project) {
+  model = await tf.loadLayersModel(
+    "indexeddb://" + project + "/model"
+  );
+}
+
 const CurrentProject = ({ match }) => {
-  const dataPoints = useDataPoints();
+  //const dataPoints = useDataPoints();
   const sensorNames = useSensorNames();
-  const sensorData = useSensorData();
+  //const sensorData = useSensorData();
   // PROJECTNAME const p = useSensorNames();
   const { projectName } = match.params;
   const [currentSensor, setCurrentSensor] = useState(sensorNames[0]);
@@ -42,37 +72,44 @@ const CurrentProject = ({ match }) => {
   const [loading, setLoading] = useState(false);
 
   const lastLoadedProjectName = useProjectName();
-
-  let points;
-  let names;
-  let info;
   
   let plot_y = []
   let plot_pred = []
 
+  function predict(dataPoint) {
+    if (sensorData.hasDifferentValueRanges) {
+      dataPoint = standardizeData(dataPoint);
+    } else {
+      dataPoint = normalizeData(dataPoint);
+    }
+    
+    const prediction = model.predict(tf.tensor2d([dataPoint], [1, dataPoint.length])).dataSync()
+    if (prediction.length === 1) {
+      return prediction[0];
+    } else {
+      return prediction;
+    }
+
+  }
+
   function doPredictions(model) {
-    console.log(model)
-    let predictions = [];
-    let real = [];
-    let predName = info.output[0];
-    let predData = points;
-    console.log("predData", predData);
-    console.log("predName", predName);
-    let dataCopy = JSON.parse(JSON.stringify(points))
-    let y_real = points.map(x => Number(x[predName]))
-    dataCopy.forEach(x => delete x[predName])
+    let predName = sensorData.output[0];
+    console.log(model);
+    let dataCopy = JSON.parse(JSON.stringify(dataPoints));
+    let y_real = dataPoints.map(x => Number(x[predName]));
+    dataCopy.forEach(x => delete x[predName]);
     let x_real = dataCopy.map(x => Object.values(x).map(y => Number(y)));
-    console.log("y_real", y_real)
-    console.log("x_real", x_real)
-    if (info.hasDifferentValueRanges) {
+    console.log("y_real", y_real);
+    console.log("x_real", x_real);
+    if (sensorData.hasDifferentValueRanges) {
       x_real = standardizeData(x_real);
     } else {
       x_real = normalizeData(x_real);
     }
 
-    let i = 0
+    let i = 0;
     x_real.forEach(p => {
-      let prediction = model.predict(tf.tensor2d([p], [1, p.length])).dataSync()
+      let prediction = model.predict(tf.tensor2d([p], [1, p.length])).dataSync();
       console.log("pred", prediction);
       console.log("real", y_real[i]);
       plot_y.push(y_real[i]);
@@ -85,53 +122,17 @@ const CurrentProject = ({ match }) => {
   }
 
   useEffect(async () => {
-    console.log("LAST LOADED", projectName, lastLoadedProjectName);
+    console.log("LAST LOADED", projectName);
     setLoading(true);
 
-    // fetching data if we de not have anything from before
-    const downloadRef = storage.ref(`${projectName}/data.csv`);
-    await downloadRef.getDownloadURL().then(async url => {
-      await csv(url).then(async data => {
-        let sensorNames = Object.keys(data[0]);
-        await setSensors(sensorNames);
-        await setDatapoints(data);
-        await setProjectName(projectName);
-        await setLoading(false);
-        points = data;
-        names = sensorNames;
-        console.log("data", data);
-      });
-    });
-    const downloadRefConfig = storage.ref(`${projectName}/sensorData.json`);
-    await downloadRefConfig.getDownloadURL().then(async url => {
-      await fetch(url)
-        .then(async response => response.json())
-        .then(async jsonData => {
-          console.log("sensorData", jsonData);
-          await setSensorData(jsonData);
-          console.log("output", jsonData.output);
-          info = jsonData;
-        });
-    });
-
-    console.log("Items")
-    console.log(dataPoints)
-    console.log(sensorNames)
-    console.log(sensorData)
-    console.log("...................")
-
-    console.log(points)
-    console.log(names)
-    console.log(info)
-
-    console.log(".........")
-
-    console.log("Loading model")
-    const loadedModel = await tf.loadLayersModel(
-      "indexeddb://" + projectName + "/model"
-    );
-
-    doPredictions(loadedModel)
+    await setConfig(projectName, setSensorData);
+    await setData(projectName, setDataPoints, setSensors)
+    console.log("dataPoints", dataPoints)
+    console.log("sensorData", sensorData)
+    console.log("sensors", sensors)
+    await setModel(projectName);
+    setLoading(false)
+    doPredictions(model)
   }, []);
 
   return (
@@ -149,7 +150,7 @@ const CurrentProject = ({ match }) => {
             Your sensors (choose one if you have not selected any):
           </div>
           <div className="CurrentProject__SensorsList">
-            {sensorNames.map(sensor => (
+            {sensors.map(sensor => (
               <div
                 className={currentSensor === sensor ? "SelectedSensor" : ""}
                 onClick={() => {
@@ -166,7 +167,7 @@ const CurrentProject = ({ match }) => {
               <Sensor
                 sensor={currentSensor}
                 dataPoints={dataPoints}
-                sensors={sensorNames}
+                sensors={sensors}
               />
             </div>
           )}
@@ -174,14 +175,14 @@ const CurrentProject = ({ match }) => {
             <SingleSensor
               sensor={currentSensor}
               dataPoints={plot_y}
-              sensors={sensorNames}
+              sensors={sensors}
             />
           </div>
           <div>
             <SingleSensor
               sensor={currentSensor}
               dataPoints={plot_pred}
-              sensors={sensorNames}
+              sensors={sensors}
             />
           </div>
         </div>
