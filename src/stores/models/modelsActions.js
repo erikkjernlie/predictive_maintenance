@@ -17,7 +17,9 @@ export function fetchModels() {
 }
 
 export async function fetchTopics() {
-  return getJSONResponse(rootAPI + "/topics/");
+  let topics = getJSONResponse(rootAPI + "/topics/");
+  console.log("TOPICS", topics);
+  return topics;
 }
 
 export function deepCopy(object) {

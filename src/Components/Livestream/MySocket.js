@@ -88,7 +88,8 @@ class MySocket extends Component {
     (async () => {
       await fetchAuthCookie();
       const topicsJSON = await fetchTopics();
-      console.log("FETCHING TOPICS", topicsJSON);
+      console.log("topicsJSON", topicsJSON); // HER ARE THE NAMES, INSIDE THIS ONE
+      // console.log("FETCHING TOPICS", topicsJSON);
       if (!topicsJSON) return;
       this.setState({
         topics: Object.entries(topicsJSON).map(topic => ({
@@ -175,9 +176,11 @@ class MySocket extends Component {
     });
     */
     // let byteFormat = this.state.subscribedSources[sourceId].byteFormat;
+    // CAN WE ONLY USE d's here? instead of hhidd.. <ddddddddddddd -> en d = HHI mtp antall bytes
     const unpackIterator = struct("<HHIdddddddddddd").iter_unpack(data);
     let unpacked = unpackIterator.next().value;
     while (unpacked) {
+      // NEED TO SYNCRONIZE TO GET CORRECT DATE
       sourceBuffer.x_buffer.push(new Date(unpacked[0] * 1000));
       const channelsIds = this.state.subscribedSources[sourceID].channels.map(
         it => it.id
@@ -187,8 +190,10 @@ class MySocket extends Component {
       });
       unpacked = unpackIterator.next().value;
       if (unpacked && unpacked.length > 0) {
+        // const timestamp = unpacked[LASTONE]
+        // const otherSelectedSources må også være med
         const data = this.state.data.concat(unpacked[9]);
-        console.log(data);
+        // console.log(data);
         this.setState({
           data: data
         });

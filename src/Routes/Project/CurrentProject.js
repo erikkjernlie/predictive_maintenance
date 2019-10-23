@@ -44,6 +44,9 @@ const CurrentProject = ({ match }) => {
       downloadRef.getDownloadURL().then(url => {
         csv(url).then(data => {
           let sensorNames = Object.keys(data[0]);
+          console.log("Sensornames", sensorNames);
+          console.log("data", data);
+
           setSensors(sensorNames);
           setDatapoints(data);
           setProjectName(projectName);
