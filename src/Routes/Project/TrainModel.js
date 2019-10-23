@@ -133,7 +133,7 @@ const TrainModel = ({ match }) => {
     console.log("targets", targets);
     console.log("Covariance matrix", getCovarianceMatrix(features));
     if (modelData.reduceTrainingTime) {
-      features = discardCovariantColumns(features)
+      //features = discardCovariantColumns(features)
     }
     if (modelData.hasDifferentValueRanges) {
       features = standardizeData(features);
