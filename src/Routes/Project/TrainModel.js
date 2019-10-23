@@ -24,7 +24,12 @@ import {
   discardCovariantColumns,
   shuffleData
 } from "./statisticsLib.js";
-
+import {
+  setDatapoints,
+  setSensors,
+  setProjectName,
+  setSensorData
+} from "../../stores/sensors/sensorsActions";
 import { storage } from "../../firebase";
 
 let modelData = {
@@ -58,11 +63,9 @@ const TrainModel = ({ match }) => {
 
   // const dataPoints = useDataPoints();
 
-  const [sensorNames, setSensorNames] = useState([]);
-  const [dataPoints, setDatapoints] = useState([]);
-
-  useEffect(async () => {
+  async function fetchData() {
     const downloadRefConfig = storage.ref(`${projectName}/sensorData.json`);
+
     await downloadRefConfig.getDownloadURL().then(url => {
       fetch(url)
         .then(response => response.json())
@@ -73,21 +76,25 @@ const TrainModel = ({ match }) => {
     });
 
     const downloadRefData = storage.ref(`${projectName}/data.csv`);
-    downloadRefData.getDownloadURL().then(url => {
+    await downloadRefData.getDownloadURL().then(url => {
       csv(url).then(data => {
-        setSensorNames(Object.keys(data[0]));
+        setSensors(Object.keys(data[0]));
         setDatapoints(data);
         console.log("data", data);
         train(data);
       });
     });
+  }
+
+  useEffect(() => {
+    fetchData();
   }, []);
 
   function getFeatureTargetSplit(data) {
     const feats = modelData.input.concat(modelData.internal);
     const targs = modelData.output;
-    console.log("feats", feats)
-    console.log("targs", targs)
+    console.log("feats", feats);
+    console.log("targs", targs);
     let features = JSON.parse(JSON.stringify(data));
     let targets = JSON.parse(JSON.stringify(data));
     feats.forEach(feat => targets.forEach(x => delete x[feat]));
@@ -120,11 +127,11 @@ const TrainModel = ({ match }) => {
     // TODO:
     // remove outliers
     // remove Null-values
-    return data
+    return data;
   }
 
   async function train(data) {
-    data = preprocessData(data)
+    data = preprocessData(data);
     data = shuffleData(data);
     let [features, targets] = getFeatureTargetSplit(data);
     features = features.map(x => Object.values(x).map(y => Number(y)));
@@ -133,7 +140,11 @@ const TrainModel = ({ match }) => {
     console.log("targets", targets);
     console.log("Covariance matrix", getCovarianceMatrix(features));
     if (modelData.reduceTrainingTime) {
+<<<<<<< HEAD
       //features = discardCovariantColumns(features)
+=======
+      features = discardCovariantColumns(features);
+>>>>>>> ab4f4890defcb924a41026771183465365487229
     }
     if (modelData.hasDifferentValueRanges) {
       features = standardizeData(features);
@@ -147,9 +158,9 @@ const TrainModel = ({ match }) => {
     );
     const tensors = convertToTensors(x_train, x_test, y_train, y_test);
     console.log("trainFeatures", tensors.trainFeatures);
-    console.log("testFeatures", tensors.testFeatures)
-    console.log("trainTargets", tensors.trainTargets)
-    console.log("testTargets", tensors.testTargets)
+    console.log("testFeatures", tensors.testFeatures);
+    console.log("trainTargets", tensors.trainTargets);
+    console.log("testTargets", tensors.testTargets);
     let r2 = -1000;
     let model;
     let predictions;
@@ -168,7 +179,7 @@ const TrainModel = ({ match }) => {
   }
 
   function getBasicModel(inputSize, outputSize) {
-    console.log("inputsize", inputSize, outputSize)
+    console.log("inputsize", inputSize, outputSize);
     const model = tf.sequential();
     model.add(
       tf.layers.dense({
