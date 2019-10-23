@@ -1,20 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useModels } from "../../stores/models/modelsStore";
-import {
+/*import {
   useSensorNames,
   useDataPoints
-} from "../../stores/sensors/sensorsStore";
+} from "../../stores/sensors/sensorsStore";*/
 import "./TrainModel.css";
-import Sensor from "../../Components/Sensor/Sensor";
 import { Link } from "react-router-dom";
-import { shuffle } from "simple-statistics";
 
 import { csv } from "d3";
 
 import * as tf from "@tensorflow/tfjs";
 import * as tfvis from "@tensorflow/tfjs-vis";
-import * as data from "./data";
-import getProcessedData from "./processData";
 import {
   getR2Score,
   normalizeData,
@@ -24,24 +20,31 @@ import {
   discardCovariantColumns,
   shuffleData
 } from "./statisticsLib.js";
-import {
+/*import {
   setDatapoints,
   setSensors,
   setProjectName,
   setSensorData
-} from "../../stores/sensors/sensorsActions";
+} from "../../stores/sensors/sensorsActions";*/
 import { storage } from "../../firebase";
+import { setConfig, setData } from "./transferLib.js";
+import { getFeatureTargetSplit, getTestTrainSplit, convertToTensors, getBasicModel, getComplexModel } from "./machineLearningLib.js";
 
-let modelData = {
-  projectName: "MyProject",
-  URLtoLiveFeed: "www.myProject.com",
-  input: [],
-  output: [],
-  internal: [],
-  hasDifferentValueRanges: false,
-  isComplex: false,
-  reduceTrainingTime: false
-};
+let dataPoints;
+let sensors;
+let sensorData;
+
+function setDataPoints(p) {
+  dataPoints = p;
+}
+
+  function setSensors(s) {
+  sensors = s
+}
+
+function setSensorData(d) {
+  sensorData = d
+}
 
 // 1. "My dataset has columns with very different value ranges" --> true: standardization, false: normalzation
 // 2. "My dataset is very complex" --> true: flere/bredere lag, false: standard modell
@@ -53,75 +56,24 @@ const modelParams = {
   learningRate: 0.01,
   epochs: 20,
   optimizer: tf.train.adam(0.01),
-  loss: "meanSquaredError"
+  loss: "meanSquaredError",
+  min_R2_score: 0.5
 };
 
 const TrainModel = ({ match }) => {
-  const models = useModels();
-  const sensors = useSensorNames();
   const { projectName } = match.params;
 
-  // const dataPoints = useDataPoints();
-
   async function fetchData() {
-    const downloadRefConfig = storage.ref(`${projectName}/sensorData.json`);
-
-    await downloadRefConfig.getDownloadURL().then(url => {
-      fetch(url)
-        .then(response => response.json())
-        .then(jsonData => {
-          modelData = jsonData;
-          console.log("modelData", modelData);
-        });
-    });
-
-    const downloadRefData = storage.ref(`${projectName}/data.csv`);
-    await downloadRefData.getDownloadURL().then(url => {
-      csv(url).then(data => {
-        setSensors(Object.keys(data[0]));
-        setDatapoints(data);
-        console.log("data", data);
-        train(data);
-      });
-    });
+    await setConfig(projectName, setSensorData);
+    await setData(projectName, setDataPoints, setSensors)
+    console.log("dataPoints", dataPoints)
+    console.log("sensorData", sensorData)
+    train(dataPoints)
   }
 
   useEffect(() => {
     fetchData();
   }, []);
-
-  function getFeatureTargetSplit(data) {
-    const feats = modelData.input.concat(modelData.internal);
-    const targs = modelData.output;
-    console.log("feats", feats);
-    console.log("targs", targs);
-    let features = JSON.parse(JSON.stringify(data));
-    let targets = JSON.parse(JSON.stringify(data));
-    feats.forEach(feat => targets.forEach(x => delete x[feat]));
-    targs.forEach(targ => features.forEach(x => delete x[targ]));
-    return [features, targets];
-  }
-
-  function getTestTrainSplit(features, targets, test_train_split) {
-    const numberOfRows = features.length;
-    const numberOfTest = Math.round(numberOfRows * test_train_split);
-    const numberOfTrain = numberOfRows - numberOfTest;
-
-    const x_train = features.slice(0, numberOfTrain - 1);
-    const x_test = features.slice(numberOfTrain - 1);
-    const y_train = targets.slice(0, numberOfTrain - 1);
-    const y_test = targets.slice(numberOfTrain - 1);
-    return [x_train, x_test, y_train, y_test];
-  }
-
-  function convertToTensors(x_train, x_test, y_train, y_test) {
-    const tensors = {};
-    tensors.trainFeatures = tf.tensor2d(x_train);
-    tensors.trainTargets = tf.tensor2d(y_train);
-    tensors.testFeatures = tf.tensor2d(x_test);
-    tensors.testTargets = tf.tensor2d(y_test);
-    return tensors;
-  }
 
   function preprocessData(data) {
     // TODO:
@@ -133,20 +85,16 @@ const TrainModel = ({ match }) => {
   async function train(data) {
     data = preprocessData(data);
     data = shuffleData(data);
-    let [features, targets] = getFeatureTargetSplit(data);
+    let [features, targets] = getFeatureTargetSplit(data, sensorData);
     features = features.map(x => Object.values(x).map(y => Number(y)));
     targets = targets.map(x => Object.values(x).map(y => Number(y)));
     console.log("features", features);
     console.log("targets", targets);
     console.log("Covariance matrix", getCovarianceMatrix(features));
-    if (modelData.reduceTrainingTime) {
-<<<<<<< HEAD
+    if (sensorData.reduceTrainingTime) {
       //features = discardCovariantColumns(features)
-=======
-      features = discardCovariantColumns(features);
->>>>>>> ab4f4890defcb924a41026771183465365487229
     }
-    if (modelData.hasDifferentValueRanges) {
+    if (sensorData.hasDifferentValueRanges) {
       features = standardizeData(features);
     } else {
       features = normalizeData(features);
@@ -164,7 +112,7 @@ const TrainModel = ({ match }) => {
     let r2 = -1000;
     let model;
     let predictions;
-    while (r2 < 0.8) {
+    while (r2 < modelParams.min_R2_score) {
       model = await trainModel(
         tensors.trainFeatures,
         tensors.trainTargets,
@@ -178,43 +126,6 @@ const TrainModel = ({ match }) => {
     }
   }
 
-  function getBasicModel(inputSize, outputSize) {
-    console.log("inputsize", inputSize, outputSize);
-    const model = tf.sequential();
-    model.add(
-      tf.layers.dense({
-        units: 10,
-        activation: modelParams.activation,
-        inputShape: [inputSize]
-      })
-    );
-    model.add(
-      tf.layers.dense({ units: outputSize, activation: modelParams.activation })
-    );
-    return model;
-  }
-
-  function getComplexModel(inputSize, outputSize) {
-    const model = tf.sequential();
-    model.add(
-      tf.layers.dense({
-        units: 10,
-        activation: modelParams.activation,
-        inputShape: [inputSize]
-      })
-    );
-    model.add(
-      tf.layers.dense({
-        units: 5,
-        activation: modelParams.activation
-      })
-    );
-    model.add(
-      tf.layers.dense({ units: outputSize, activation: modelParams.activation })
-    );
-    return model;
-  }
-
   async function trainModel(xTrain, yTrain, xTest, yTest) {
     // console.log("Start training");
     // const params = ui.loadTrainParametersFromUI();
@@ -222,10 +133,10 @@ const TrainModel = ({ match }) => {
     console.log("xtrain shape", xTrain.shape[1]);
     // Define the topology of the model: two dense layers.
     let model;
-    if (modelData.isComplex) {
-      model = getComplexModel(xTrain.shape[1], yTrain.shape[1]);
+    if (sensorData.isComplex) {
+      model = getComplexModel(xTrain.shape[1], yTrain.shape[1], modelParams);
     } else {
-      model = getBasicModel(xTrain.shape[1], yTrain.shape[1]);
+      model = getBasicModel(xTrain.shape[1], yTrain.shape[1], modelParams);
     }
     model.summary();
 

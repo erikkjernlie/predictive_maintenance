@@ -18,6 +18,7 @@ import {
 } from "../../stores/sensors/sensorsActions";
 import { min } from "simple-statistics";
 import { Checkbox } from "@material-ui/core";
+import { uploadData, uploadConfig } from "./transferLib.js";
 
 const ProjectSetup = props => {
   const [file, setFile] = useState(null);
@@ -72,60 +73,23 @@ const ProjectSetup = props => {
 
   const handleUpload = () => {
     setUploading(true);
-    const fileData = JSON.stringify(sensorData);
-    const csvblob = new Blob([file], {type: "application/vnd.ms-excel"})
-    const uploadTaskData = storage.ref(`${projectName}/data.csv`).put(csvblob);
-    uploadTaskData.on(
-      "state_changed",
-      snapshot => {
-        const progress = Math.round(
-          (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+    uploadData(file, projectName, setProgress);
+    uploadConfig(JSON.stringify(sensorData), projectName, setProgress)
+    setUploading(false);
+    if (projectName.length > 0) {
+      if (localStorage.getItem("projects")) {
+        localStorage.setItem(
+          "projects",
+          localStorage.getItem("projects") + " " + projectName
         );
-        setProgress(progress);
-      },
-      error => {
-        console.log(error);
-      },
-      () => {
-        // complete function ....
-
-        const configblob = new Blob([fileData], { type: "application/json" });
-        const uploadTaskConfig = storage.ref(`${projectName}/sensorData.json`).put(configblob);
-        // observer for when the state changes, e.g. progress
-        uploadTaskConfig.on(
-          "state_changed",
-          snapshot => {
-            const progress = Math.round(
-              (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-            );
-            setProgress(progress);
-          },
-          error => {
-            console.log(error);
-          },
-          () => {
-            // complete function ....
-            setUploading(true); // false???
-
-            // add project
-            if (projectName.length > 0) {
-              if (localStorage.getItem("projects")) {
-                localStorage.setItem(
-                  "projects",
-                  localStorage.getItem("projects") + " " + projectName
-                );
-              } else {
-                localStorage.setItem("projects", projectName);
-              }
-            }
-            setTimeout(() => {
-              props.history.push(projectName + "/configuration");
-            }, 500);
-          }
-        );
+      } else {
+        localStorage.setItem("projects", projectName);
       }
-    );
-  };
+    }
+    setTimeout(() => {
+      props.history.push(projectName + "/configuration");
+    }, 500);
+  }
 
   const changeDatasetFact = id => {
     switch (id) {

@@ -100,9 +100,10 @@ class MySocket extends Component {
         }))
       });
 
-      const subscribe = subscribeToSource("0000");
+      //const subscribe = subscribeToSource("0000");
 
       // ADD EVERYTHING TO SELECTED SOURCES
+      /*
       const subscribeSources = this.state.selectedSources
         .filter(
           source =>
@@ -118,6 +119,8 @@ class MySocket extends Component {
             source.selectedChannels
           )
         }));
+      */
+
       /*
       await this.$store.dispatch(
         "channelModule/generateDataSources",

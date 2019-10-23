@@ -12,7 +12,6 @@ import {
 
 export function getDatasetByColumns(dataset) {
     const numberOfColumns = dataset[0].length
-    const numberOfRows = dataset.length
     const columnsData = []
     for (var i = 0; i < numberOfColumns; i++) {
       const column = dataset.map(x => x[i])
@@ -53,8 +52,8 @@ export function standardizeData(dataset) {
     const numberOfRows = dataset.length
     let meanvals = []
     let stdvals = []
-    for (var i = 0; i < numberOfColumns; i++) {
-      const col = dataset.map(x => x[i])
+    for (var k = 0; k < numberOfColumns; k++) {
+      const col = dataset.map(x => x[k])
       meanvals.push(mean(col))
       stdvals.push(standardDeviation(col))
     }
@@ -74,8 +73,8 @@ export function normalizeData(data) {
     const numberOfRows = data.length
     let maxvals = []
     let minvals = []
-    for (var i = 0; i < numberOfColumns; i++) {
-      const col = data.map(x => x[i])
+    for (var k = 0; k < numberOfColumns; k++) {
+      const col = data.map(x => x[k])
       maxvals.push(max(col))
       minvals.push(min(col))
     }
@@ -106,11 +105,11 @@ export function getR2Score(predict, data) {
     // GET MEAN VALUE 
     meanValue = (meanValue / data.length);
 
-    for (var n = 0; n < data.length; n++) {
+    for (var m = 0; m < data.length; m++) {
       // CALCULATE THE SSTOTAL
-      SStot += Math.pow(data[n] - meanValue, 2); 
+      SStot += Math.pow(data[m] - meanValue, 2); 
       // CALCULATE THE SSRES
-      SSres += Math.pow(predict[n] - data[n], 2);
+      SSres += Math.pow(predict[m] - data[m], 2);
     }
 
     // R SQUARED
