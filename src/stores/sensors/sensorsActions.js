@@ -8,7 +8,7 @@ export function setSensors(sensorNames) {
   });
 }
 
-export function setDatapoints(dataPoints) {
+export function setDataPoints(dataPoints) {
   sensorsStore.setState({
     dataPoints: dataPoints
   });
@@ -30,7 +30,7 @@ export function setProjectName(projectName) {
     csv(url).then(data => {
       let sensorNames = Object.keys(data[0]);
       setSensors(sensorNames);
-      setDatapoints(data);
+      setDataPoints(data);
     });
   });
   sensorData["projectName"] = projectName;

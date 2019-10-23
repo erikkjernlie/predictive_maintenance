@@ -20,11 +20,6 @@ const store = createStore({
   }
 });
 
-export function useSensors() {
-  const { sensors } = useStoreState(store);
-  return sensors;
-}
-
 export function useProjectName() {
   const { sensorData } = useStoreState(store);
   const { projectName } = sensorData;
@@ -51,6 +46,11 @@ export function useDataPoints() {
 export function useSensorData() {
   const { sensorData } = useStoreState(store);
   return sensorData;
+}
+
+export function useSensors() {
+  const { sensors } = useStoreState(store);
+  return sensors;
 }
 
 export default store;

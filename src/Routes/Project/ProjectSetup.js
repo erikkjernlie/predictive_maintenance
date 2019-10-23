@@ -7,10 +7,12 @@ import AddSensor from "../../Components/Sensor/AddSensor";
 import CSVReader from "react-csv-reader";
 import {
   useSensorData,
-  useProjectName
+  useProjectName,
+  useDataPoints,
+  useSensors,
 } from "../../stores/sensors/sensorsStore";
 import {
-  setDatapoints,
+  setDataPoints,
   setSensors,
   setLiveFeedURL,
   createProjectName,
@@ -37,8 +39,9 @@ const ProjectSetup = props => {
   const [step2, setStep2] = useState(false);
 
   const sensorData = useSensorData();
-
   const projectName = useProjectName();
+  const dataPoints = useDataPoints();
+  const sensors = useSensors();
 
   const handleProjectName = e => {
     if (e.target.value) {
@@ -62,7 +65,7 @@ const ProjectSetup = props => {
   const selectDataset = data => {
     setSelectedDataset(true);
     let sensorNames = data[0];
-    setDatapoints(data);
+    setDataPoints(data);
     setSensorNames(sensorNames);
     setSensors(sensorNames);
     createProjectName(projectName);

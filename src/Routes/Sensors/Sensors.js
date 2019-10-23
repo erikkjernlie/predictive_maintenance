@@ -11,7 +11,7 @@ import * as data from "./data";
 
 const Sensors = props => {
   const [sensorNames, setSensorNames] = useState([]);
-  const [dataPoints, setDatapoints] = useState([]);
+  const [dataPoints, setDataPoints] = useState([]);
 
   // TODO: NEXT STEP IS TO MAKE A LIST OF SENSORS: sensorName: { sensorName, unit, type },
 
@@ -21,7 +21,7 @@ const Sensors = props => {
       console.log(sensorNames);
       let dataPoints = data.slice(1);
       setSensorNames(sensorNames);
-      setDatapoints(dataPoints);
+      setDataPoints(dataPoints);
       console.log(dataPoints);
       train();
     });

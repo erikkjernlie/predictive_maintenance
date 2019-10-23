@@ -114,6 +114,7 @@ const CurrentProject = ({ match }) => {
 
     let i = 0;
     x_real.forEach(p => {
+      console.log("p", p)
       let prediction = model
         .predict(tf.tensor2d([p], [1, p.length]))
         .dataSync();

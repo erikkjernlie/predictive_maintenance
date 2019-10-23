@@ -68,11 +68,11 @@ const TrainModel = ({ match }) => {
     await setData(projectName, setDataPoints, setSensors)
     console.log("dataPoints", dataPoints)
     console.log("sensorData", sensorData)
-    train(dataPoints)
   }
 
-  useEffect(() => {
-    fetchData();
+  useEffect(async () => {
+    await fetchData();
+    train(dataPoints)
   }, []);
 
   function preprocessData(data) {
