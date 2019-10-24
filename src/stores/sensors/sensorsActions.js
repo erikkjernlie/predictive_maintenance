@@ -2,10 +2,22 @@ import sensorsStore from "./sensorsStore";
 import { storage } from "../../firebase";
 import { csv } from "d3";
 
-export function setSensors(sensorNames) {
+function addConfigVariable(variable, value) {
+  let config = sensorsStore.getState().config;
+  config[variable] = config[variable].concat(value);
   sensorsStore.setState({
-    sensorNames: sensorNames
-  });
+    config: config
+  })
+}
+function setConfigVariable(variable, value) {
+  let config = sensorsStore.getState().config;
+  config[variable] = value;
+  sensorsStore.setState({
+    config: config
+  })
+}
+export function setSensorNames(value) {
+  addConfigVariable("sensorNames", value);
 }
 
 export function setDataPoints(dataPoints) {
@@ -13,82 +25,80 @@ export function setDataPoints(dataPoints) {
     dataPoints: dataPoints
   });
 }
-
-export function setConfig(variable, value) {
-  let sensorData = sensorsStore.getState().sensorData;
-  sensorData[variable] = value;
+export function setDataPointsProcessed(dataPointsProcessed) {
   sensorsStore.setState({
-    sensorData: sensorData
+    dataPointsProcessed: dataPointsProcessed
   });
 }
-
-export function setProjectName(projectName) {
-  let sensorData = sensorsStore.getState().sensorData;
-
-  const downloadRef = storage.ref(`${projectName}/data.csv`);
-  downloadRef.getDownloadURL().then(url => {
-    csv(url).then(data => {
-      let sensorNames = Object.keys(data[0]);
-      setSensors(sensorNames);
-      setDataPoints(data);
-    });
-  });
-  sensorData["projectName"] = projectName;
+function addInput(value) {
+  addConfigVariable("input", value);
+}
+function addOutput(value) {
+  addConfigVariable("output", value);
+}
+function addInternal(value) {
+  addConfigVariable("internal", value);
+}
+function resetSensors() {
+  let config = sensorsStore.getState().config;
+  config["input"] = [];
+  config["output"] = [];
+  config["internal"] = [];
   sensorsStore.setState({
-    sensorData: sensorData
-  });
+    config: config
+  })
 }
 
-export function createProjectName(projectName) {
-  let sensorData = sensorsStore.getState().sensorData;
-  sensorData["projectName"] = projectName;
+export function setData(value) {
+  let config = sensorsStore.getState().config;
+  config["data"] = value;
   sensorsStore.setState({
-    sensorData: sensorData
-  });
-}
-
-export function setLiveFeedURL(url) {
-  let sensorData = sensorsStore.getState().sensorData;
-  sensorData["URLtoLiveFeed"] = url;
-  sensorsStore.setState({
-    sensorData: sensorData
-  });
-}
-
-export function setSensorData(sensorData) {
-  sensorsStore.setState({
-    sensorData: sensorData
-  });
-}
-
-// CAN REMOVE THIS ONE
-export function saveSensorData(sensor, type, unit) {
-  let sensorData = sensorsStore.getState().sensorData;
-  console.log(sensorData);
-  if (sensorData["internal"].indexOf(sensor) >= 0) {
-    sensorData["internal"] = sensorData["internal"].filter(s => s !== sensor);
-  }
-  if (sensorData["input"].indexOf(sensor) >= 0) {
-    sensorData["input"] = sensorData["input"].filter(s => s !== sensor);
-  }
-  if (sensorData["output"].indexOf(sensor) >= 0) {
-    sensorData["output"] = sensorData["output"].filter(s => s !== sensor);
-  }
-  sensorData[type] = sensorData[type].concat(sensor);
-  console.log(sensorData);
-  sensorsStore.setState({
-    sensorData: sensorData
+    config: config
   });
 }
 
 export function addSensor(sensor, type, unit) {
-  let sensorData = sensorsStore.getState().sensorData;
-  sensorData["sensors"] = sensorData["sensors"].concat({
+  let config = sensorsStore.getState().config;
+  config["sensors"].forEach(function (x, index) {
+    if (x.name === sensor) {
+      config["sensors"].splice(index, 1);
+    }
+  })
+  config["sensors"] = config["sensors"].concat({
     name: sensor,
     type: type,
     unit: unit
   });
+  resetSensors();
+  config["sensors"].forEach(sensor => {
+    config[sensor.type] = config[sensor.type].concat(sensor.name);
+  })
   sensorsStore.setState({
-    sensorData: sensorData
+    config: config
   });
+}
+export function setProjectName(value) {
+  setConfigVariable("projectName", value)
+}
+export function setLiveFeedURL(value) {
+  setConfigVariable("liveFeedURL", value);
+}
+export function setDifferentValueRanges(value) {
+  setConfigVariable("differentValueRanges", value);
+}
+export function setReduceTrainingTime(value) {
+  setConfigVariable("reduceTrainingTime", value);
+}
+export function setIsComplex(value) {
+  setConfigVariable("isComplex", value);
+}
+export function setConfig(value) {
+  sensorsStore.setState({
+    config: value
+  })
+}
+export function setConfigProcessed(value) {
+  sensorsStore.setState({
+    configProcessed: value
+  })
 }

@@ -2,55 +2,54 @@ import createStore from "../createStore";
 import useStoreState from "../useStoreState";
 
 const store = createStore({
-  sensors: [],
-  fetching: false,
-  data: [],
-  sensorNames: [],
   dataPoints: [],
-  sensorData: {
+  dataPointsProcessed: [],
+  config: {
     input: [],
     output: [],
     internal: [],
     sensors: [],
+    sensorNames: [],
     projectName: "",
     URLtoLiveFeed: "",
-    hasDifferentValueRanges: false,
+    differentValueRanges: false, 
     reduceTrainingTime: false,
-    isComplex: false
+    isComplex: false,
+    data: [],
+  },
+  configProcessed: {
+    input: [],
+    output: [],
+    internal: [],
+    sensors: [],
+    sensorNames: [],
+    projectName: "",
+    URLtoLiveFeed: "",
+    differentValueRanges: false, 
+    reduceTrainingTime: false,
+    isComplex: false,
+    data: [],
   }
 });
-
-export function useProjectName() {
-  const { sensorData } = useStoreState(store);
-  const { projectName } = sensorData;
-  return projectName;
-}
-
-export function useData() {
-  const { data } = useStoreState(store);
-  console.log(data);
-
-  return data;
-}
-
-export function useSensorNames() {
-  const { sensorNames } = useStoreState(store);
-  return sensorNames;
-}
 
 export function useDataPoints() {
   const { dataPoints } = useStoreState(store);
   return dataPoints;
 }
 
-export function useSensorData() {
-  const { sensorData } = useStoreState(store);
-  return sensorData;
+export function useConfig() {
+  const { config } = useStoreState(store);
+  return config;
 }
 
-export function useSensors() {
-  const { sensors } = useStoreState(store);
-  return sensors;
+export function useDataPointsProcessed() {
+  const { dataPointsProcessed } = useStoreState(store);
+  return dataPointsProcessed;
+}
+
+export function useConfigProcessed() {
+  const { configProcessed } = useStoreState(store);
+  return configProcessed;
 }
 
 export default store;

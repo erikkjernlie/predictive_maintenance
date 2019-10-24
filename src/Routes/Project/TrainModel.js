@@ -1,13 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { useModels } from "../../stores/models/modelsStore";
-/*import {
-  useSensorNames,
-  useDataPoints
-} from "../../stores/sensors/sensorsStore";*/
+import {
+  useConfigProcessed,
+  useDataPointsProcessed
+} from "../../stores/sensors/sensorsStore";
 import "./TrainModel.css";
 import { Link } from "react-router-dom";
-
-import { csv } from "d3";
 
 import * as tf from "@tensorflow/tfjs";
 import * as tfvis from "@tensorflow/tfjs-vis";
@@ -18,33 +16,16 @@ import {
   getCovarianceMatrix,
   getDatasetByColumns,
   discardCovariantColumns,
-  shuffleData
+  shuffleData,
+  fillConfig
 } from "./statisticsLib.js";
-/*import {
-  setDatapoints,
-  setSensors,
-  setProjectName,
-  setSensorData
-} from "../../stores/sensors/sensorsActions";*/
-import { storage } from "../../firebase";
-import { setConfig, setData } from "./transferLib.js";
+import {
+  setDataPointsProcessed,
+  setConfigProcessed,
+} from "../../stores/sensors/sensorsActions";
+import { loadConfig, loadData, uploadConfigMod } from "./transferLib.js";
 import { getFeatureTargetSplit, getTestTrainSplit, convertToTensors, getBasicModel, getComplexModel } from "./machineLearningLib.js";
 
-let dataPoints;
-let sensors;
-let sensorData;
-
-function setDataPoints(p) {
-  dataPoints = p;
-}
-
-  function setSensors(s) {
-  sensors = s
-}
-
-function setSensorData(d) {
-  sensorData = d
-}
 
 // 1. "My dataset has columns with very different value ranges" --> true: standardization, false: normalzation
 // 2. "My dataset is very complex" --> true: flere/bredere lag, false: standard modell
@@ -61,18 +42,33 @@ const modelParams = {
 };
 
 const TrainModel = ({ match }) => {
+
+  const configProcessed = useConfigProcessed();
+  const dataPointsProcessed = useDataPointsProcessed();
+
+  let config;
+  let dataPoints;
+
+  function setConf(val) {
+    config = val;
+  }
+
+  function setDataP(val) {
+    dataPoints = val;
+  }
+
   const { projectName } = match.params;
 
   async function fetchData() {
-    await setConfig(projectName, setSensorData);
-    await setData(projectName, setDataPoints, setSensors)
-    console.log("dataPoints", dataPoints)
-    console.log("sensorData", sensorData)
+    await loadConfig(projectName, setConf);
+    await loadData(projectName, setDataP);
+    console.log("dataP", dataPoints)
+    console.log("conf", config);
   }
 
   useEffect(async () => {
     await fetchData();
-    train(dataPoints)
+    train(dataPoints, config);
   }, []);
 
   function preprocessData(data) {
@@ -82,23 +78,28 @@ const TrainModel = ({ match }) => {
     return data;
   }
 
-  async function train(data) {
+  async function train(data, configuration) {
+    console.log("data, inside train", data);
     data = preprocessData(data);
+    fillConfig(data, configuration);
     data = shuffleData(data);
-    let [features, targets] = getFeatureTargetSplit(data, sensorData);
+    console.log("data shuffled", data);
+    let [features, targets] = getFeatureTargetSplit(data, configuration);
     features = features.map(x => Object.values(x).map(y => Number(y)));
     targets = targets.map(x => Object.values(x).map(y => Number(y)));
     console.log("features", features);
     console.log("targets", targets);
     console.log("Covariance matrix", getCovarianceMatrix(features));
-    if (sensorData.reduceTrainingTime) {
+    if (configuration.reduceTrainingTime) {
       //features = discardCovariantColumns(features)
     }
-    if (sensorData.hasDifferentValueRanges) {
-      features = standardizeData(features);
+    if (!configuration.differentValueRanges) {
+      features = standardizeData(features, configuration);
     } else {
-      features = normalizeData(features);
+      features = normalizeData(features, configuration);
     }
+    console.log("features, processed", features);
+    console.log("targets, processed", targets);
     const [x_train, x_test, y_train, y_test] = getTestTrainSplit(
       features,
       targets,
@@ -117,23 +118,27 @@ const TrainModel = ({ match }) => {
         tensors.trainFeatures,
         tensors.trainTargets,
         tensors.testFeatures,
-        tensors.testTargets
+        tensors.testTargets,
+        configuration
       );
       predictions = model.predict(tensors.testFeatures);
       //console.log("PREDICT", predictions);
       r2 = getR2Score(predictions.arraySync(), y_test).rSquared;
       console.log("R2 score: ", r2);
     }
+    uploadConfigMod(config, config.projectName);
+    setDataPointsProcessed(dataPoints);
+    setConfigProcessed(config);
   }
 
-  async function trainModel(xTrain, yTrain, xTest, yTest) {
+  async function trainModel(xTrain, yTrain, xTest, yTest, configuration) {
     // console.log("Start training");
     // const params = ui.loadTrainParametersFromUI();
 
     console.log("xtrain shape", xTrain.shape[1]);
     // Define the topology of the model: two dense layers.
     let model;
-    if (sensorData.isComplex) {
+    if (configuration.isComplex) {
       model = getComplexModel(xTrain.shape[1], yTrain.shape[1], modelParams);
     } else {
       model = getBasicModel(xTrain.shape[1], yTrain.shape[1], modelParams);

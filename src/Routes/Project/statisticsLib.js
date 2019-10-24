@@ -40,20 +40,32 @@ export function discardCovariantColumns(dataset) {
     for (var i = 0; i < dataset[0].length; i++) {
       for (var j = i+1; j < dataset[0].length; j++) {
         if (cov[i][j] > 0.90) {
-          clone = clone.map(x => x.slice(0,i).concat(x.slice(i+1)))
+          clone = clone.map(x => x.slice(0,i).concat(x.slice(i+1)));
         }
       }
     }
     return clone
   }
 
-export function standardizeData(dataset) {
-    const numberOfColumns = dataset[0].length
-    const numberOfRows = dataset.length
+export function fillConfig(data, config) {
+  Object.keys(data[0]).forEach(function (key) {
+    let column = data.map(x => Number(x[key]));
+    let index = config.sensors.findIndex(sensor => sensor.name === key);
+    config.sensors[index]["mean"] = mean(column);
+    config.sensors[index]["std"] = standardDeviation(column);
+    config.sensors[index]["max"] = max(column);
+    config.sensors[index]["min"] = min(column);
+  });
+  console.log(config);
+}
+
+export function standardizeData(data) {
+    const numberOfColumns = data[0].length
+    const numberOfRows = data.length
     let meanvals = []
     let stdvals = []
     for (var k = 0; k < numberOfColumns; k++) {
-      const col = dataset.map(x => x[k])
+      const col = data.map(x => x[k])
       meanvals.push(mean(col))
       stdvals.push(standardDeviation(col))
     }
@@ -61,7 +73,7 @@ export function standardizeData(dataset) {
     for (var i = 0; i < numberOfRows; i++) {
       const row = []
       for (var j = 0; j < numberOfColumns; j++) {
-        row.push((dataset[i][j] - meanvals[j])/(stdvals[j]))
+        row.push((data[i][j] - meanvals[j])/(stdvals[j]))
       }
       standardized.push(row)
     }

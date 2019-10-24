@@ -19,7 +19,7 @@ const AddSensor = props => {
     } else if (outputSensor) {
       addSensor(props.sensor, "output", unit);
     } else if (internalSensor) {
-      addSensor(props.sensor, "output", unit);
+      addSensor(props.sensor, "internal", unit);
     } else {
       addSensor(props.sensor, "input", unit);
     }
@@ -31,7 +31,6 @@ const AddSensor = props => {
         setInputSensor(true);
         setOutputSensor(false);
         setInternalSensor(false);
-        saveSensorData(props.sensor, "input", unit);
         addSensor(props.sensor, "input", unit);
         // save something to store here?
         break;
@@ -39,16 +38,13 @@ const AddSensor = props => {
         setOutputSensor(true);
         setInputSensor(false);
         setInternalSensor(false);
-        saveSensorData(props.sensor, "output", unit);
         addSensor(props.sensor, "output", unit);
-
         // save something to store here?
         break;
       case 2:
         setInternalSensor(true);
         setOutputSensor(false);
         setInputSensor(false);
-        saveSensorData(props.sensor, "internal", unit);
         addSensor(props.sensor, "internal", unit);
         // save something to store here?
         break;

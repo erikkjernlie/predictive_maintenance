@@ -36,7 +36,7 @@ const MyProject = ({ match }) => {
         csv(url).then(data => {
           let sensorNames = Object.keys(data[0]);
           setSensors(sensorNames);
-          setDatapoints(data);
+          setDataPoints(data);
           setProjectName(projectName);
           setLoading(false);
         });
