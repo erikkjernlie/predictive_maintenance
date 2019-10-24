@@ -23,7 +23,7 @@ export function uploadData(data, project, progressMethod) {
 
 export function uploadConfig(config, project, progressMethod) {
     const configblob = new Blob([JSON.stringify(config)], { type: "application/json" });
-    const uploadTaskConfig = storage.ref(`${project}/sensorData.json`).put(configblob);
+    const uploadTaskConfig = storage.ref(`${project}/config.json`).put(configblob);
     // observer for when the state changes, e.g. progress
     uploadTaskConfig.on(
       "state_changed",
@@ -55,7 +55,7 @@ export function uploadConfigMod(config, project) {
   }
 
 export async function loadConfig(project, func) {
-    const downloadRefConfig = storage.ref(`${project}/sensorData.json`);
+    const downloadRefConfig = storage.ref(`${project}/config.json`);
     await downloadRefConfig.getDownloadURL().then(async url => {
       await fetch(url)
         .then(response => response.json())

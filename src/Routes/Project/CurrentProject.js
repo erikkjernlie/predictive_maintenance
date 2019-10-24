@@ -25,7 +25,7 @@ import {
   standardizeData,
   getCovarianceMatrix,
   getDatasetByColumns,
-  discardCovariantColumns,
+  getReducedDataset,
   shuffleData
 } from "./statisticsLib.js";
 

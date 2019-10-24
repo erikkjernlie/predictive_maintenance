@@ -34,7 +34,7 @@ export function getCovarianceMatrix(dataset) {
     return covariances
   }
 
-export function discardCovariantColumns(dataset) {
+export function getReducedDataset(dataset) {
     const cov = getCovarianceMatrix(dataset)
     let clone = JSON.parse(JSON.stringify(dataset));
     for (var i = 0; i < dataset[0].length; i++) {
@@ -105,26 +105,21 @@ export function getR2Score(predict, data) {
     data = data.map(x => Number(x));
     predict = predict.map(x => Number(x))
 
-    var meanValue = 0; // MEAN VALUE
-    var SStot = 0; // THE TOTAL SUM OF THE SQUARES
-    var SSres = 0; // RESIDUAL SUM OF SQUARES
+    var meanValue = 0;
+    var SStot = 0;
+    var SSres = 0;
     var rSquared = 0;
 
-    // SUM ALL VALUES
     for (var n = 0; n < data.length; n++) { 
       meanValue += data[n];
     }
-    // GET MEAN VALUE 
     meanValue = (meanValue / data.length);
 
     for (var m = 0; m < data.length; m++) {
-      // CALCULATE THE SSTOTAL
       SStot += Math.pow(data[m] - meanValue, 2); 
-      // CALCULATE THE SSRES
       SSres += Math.pow(predict[m] - data[m], 2);
     }
 
-    // R SQUARED
     rSquared = 1 - (SSres / SStot);
     
     return {

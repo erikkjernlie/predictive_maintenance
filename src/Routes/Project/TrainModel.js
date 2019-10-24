@@ -15,7 +15,7 @@ import {
   standardizeData,
   getCovarianceMatrix,
   getDatasetByColumns,
-  discardCovariantColumns,
+  getReducedDataset,
   shuffleData,
   fillConfig
 } from "./statisticsLib.js";
@@ -91,7 +91,7 @@ const TrainModel = ({ match }) => {
     console.log("targets", targets);
     console.log("Covariance matrix", getCovarianceMatrix(features));
     if (configuration.reduceTrainingTime) {
-      //features = discardCovariantColumns(features)
+      //features = getReducedDataset(features)
     }
     if (!configuration.differentValueRanges) {
       features = standardizeData(features, configuration);
