@@ -4,7 +4,7 @@ import Plot from "react-plotly.js";
 export default class PlotIt extends Component {
   state = {
     layout: {
-      width: 420,
+      width: 1000,
       height: 340,
       padding: 0,
       title: "Data from test rigg",

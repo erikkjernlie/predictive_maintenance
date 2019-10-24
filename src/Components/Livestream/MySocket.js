@@ -6,12 +6,24 @@ import {
   subscribeToSource,
   fetchAuthCookie
 } from "../../stores/models/modelsActions";
+import {
+  standardizeData,
+  normalizeData
+} from "../../Routes/Project/statisticsLib";
+
+import * as tf from "@tensorflow/tfjs";
+import { useProjectName } from "../../stores/sensors/sensorsStore";
 
 // const URL = "ws://169.254.109.234:1337";
 const URL = "ws://tvilling.digital:1337";
+let model;
 
 class MySocket extends Component {
   ws = new WebSocket(URL);
+
+  constructor(props) {
+    super(props);
+  }
 
   state = {
     sourceBuffers: {},
@@ -19,7 +31,11 @@ class MySocket extends Component {
     topics: [],
     pushDataIntervalID: undefined,
     data: [],
+    time: [],
+    predictions: [],
+    outputNames: [],
     selectedSources: [],
+    horizontal_line: [],
     subscribedSources: {
       "0001": {
         byteFormat: "<HHIdddddddddddd",
@@ -43,6 +59,25 @@ class MySocket extends Component {
       }
     }
   };
+
+  predict(dataPoint) {
+    /* NEED TO BE FIXED
+    if (true) {
+      dataPoint = standardizeData([dataPoint]);
+    } else {
+      dataPoint = normalizeData(dataPoint);
+    }
+    */
+
+    const prediction = model
+      .predict(tf.tensor2d([dataPoint], [1, dataPoint.length]))
+      .dataSync();
+    if (prediction.length === 1) {
+      return prediction[0];
+    } else {
+      return prediction;
+    }
+  }
 
   bundleMatrixOutput = (allOutputs, matrixOutputRefs) => {
     const matrixOutputs = Object.entries(matrixOutputRefs).map(matrixOutput => {
@@ -86,8 +121,13 @@ class MySocket extends Component {
 
   componentDidMount() {
     (async () => {
+      const project = this.props.project;
+      // model = await tf.loadLayersModel("indexeddb://" + project + "/model");
       await fetchAuthCookie();
       const topicsJSON = await fetchTopics();
+      this.setState({
+        outputNames: topicsJSON["0000"].output_names
+      }); // hard coded "0000"
       console.log("topicsJSON", topicsJSON); // HER ARE THE NAMES, INSIDE THIS ONE
       // console.log("FETCHING TOPICS", topicsJSON);
       if (!topicsJSON) return;
@@ -168,10 +208,12 @@ class MySocket extends Component {
   };
 
   parseData = (data, sourceID) => {
+    // console.log(data);
     const sourceBuffer = this.state.sourceBuffers[sourceID];
     if (sourceBuffer === undefined) {
       return;
     }
+
     /*
     this.setState({
       packetCounter: this.state.packetCounter + 1
@@ -183,6 +225,8 @@ class MySocket extends Component {
     let unpacked = unpackIterator.next().value;
     while (unpacked) {
       // NEED TO SYNCRONIZE TO GET CORRECT DATE
+      // FIX THIS STUFF BELOW
+
       sourceBuffer.x_buffer.push(new Date(unpacked[0] * 1000));
       const channelsIds = this.state.subscribedSources[sourceID].channels.map(
         it => it.id
@@ -190,15 +234,36 @@ class MySocket extends Component {
       channelsIds.forEach(channelID => {
         sourceBuffer.y_buffer[channelID].push(unpacked[channelID + 1]);
       });
+
       unpacked = unpackIterator.next().value;
       if (unpacked && unpacked.length > 0) {
         // const timestamp = unpacked[LASTONE]
         // const otherSelectedSources må også være med
-        const data = this.state.data.concat(unpacked[9]);
-        // console.log(data);
-        this.setState({
-          data: data
-        });
+        // data has 3 values, then the names start
+        // const time = this.state.time.concat(new Date(unpacked[11 + 3] * 1000));
+        if (this.state.data.length >= 400) {
+          let d = this.state.data;
+          let e = this.state.time;
+          d.shift();
+          d.concat(unpacked[6]);
+          e.shift();
+          e.concat(new Date(unpacked[14] * 1000));
+          this.setState({
+            data: d,
+            time: e
+          });
+        } else {
+          const data = this.state.data.concat(unpacked[6]);
+          const time = this.state.time.concat(new Date(unpacked[14] * 1000));
+          // const horizontal_line = this.state.horizontal_line.concat(200);
+          this.setState({
+            data: data,
+            time: time
+          });
+        }
+        // console.log("ARRAY", array2);
+        // const predictions = this.state.predictions.concat(this.predict(array2));
+        // console  .log(data);
       }
     }
   };
@@ -249,7 +314,12 @@ class MySocket extends Component {
     return (
       <div>
         <h4>Livestream data:</h4>
-        <PlotIt dataPoints={[{ y: this.state.data }]} />
+        <PlotIt
+          dataPoints={[
+            { y: this.state.data, x: this.state.time },
+            { y: this.state.predictions, marker: { color: "red" } }
+          ]}
+        />
       </div>
     );
   }
