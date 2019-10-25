@@ -100,11 +100,13 @@ const TrainModel = ({ match }) => {
     if (configuration.reduceTrainingTime) {
       //features = getReducedDataset(features)
     }
+    /*
     if (!configuration.differentValueRanges) {
       features = standardizeData(features, configuration);
     } else {
       features = normalizeData(features, configuration);
     }
+    */
     console.log("features, processed", features);
     console.log("targets, processed", targets);
     const [x_train, x_test, y_train, y_test] = getTestTrainSplit(

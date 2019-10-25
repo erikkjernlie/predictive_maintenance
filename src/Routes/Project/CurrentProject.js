@@ -40,8 +40,8 @@ import {
   getBasicModel,
   getComplexModel
 } from "./machineLearningLib.js";
+import { fetchModel } from "../../stores/sensors/sensorsActions";
 
-let model;
 let dataPoints;
 let sensors = [];
 let sensorData;
@@ -58,18 +58,19 @@ function setSensorData(d) {
   sensorData = d;
 }
 
-async function setModel(project) {
-  model = await tf.loadLayersModel("indexeddb://" + project + "/model");
-}
-
 const CurrentProject = ({ match }) => {
+  console.log("hey");
   const { projectName } = match.params;
   const [currentSensor, setCurrentSensor] = useState("");
   const conf = useConfig();
+  console.log("CONFIG", conf);
 
   const [loading, setLoading] = useState(false);
 
   const lastLoadedProjectName = projectName;
+
+  const model = fetchModel();
+  console.log("m", model);
 
   let plot_y = [];
   let plot_pred = [];
@@ -133,14 +134,14 @@ const CurrentProject = ({ match }) => {
     console.log("dataPoints", dataPoints);
     console.log("sensorData", sensorData);
     console.log("sensors", sensors);
-    await setModel(projectName);
+    // await setModel(projectName);
     setLoading(false);
     doPredictions(model);
   }
 
   useEffect(() => {
-    doStuff();
-    console.log(conf);
+    // doStuff();
+    // console.log(conf);
   }, []);
 
   return (
@@ -154,7 +155,7 @@ const CurrentProject = ({ match }) => {
       )}
       {!loading && (
         <div>
-          <MySocket conf={conf} />
+          <MySocket conf={conf} predict={() => predict()} model={model} />
         </div>
       )}
       {!loading && (

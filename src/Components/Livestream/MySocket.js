@@ -12,11 +12,11 @@ import {
 } from "../../Routes/Project/statisticsLib";
 
 import * as tf from "@tensorflow/tfjs";
-import { useProjectName } from "../../stores/sensors/sensorsStore";
+import { useProjectName, useConfig } from "../../stores/sensors/sensorsStore";
+import { fetchModel, fetchConfig } from "../../stores/sensors/sensorsActions";
 
 // const URL = "ws://169.254.109.234:1337";
 const URL = "ws://tvilling.digital:1337";
-let model;
 
 class MySocket extends Component {
   ws = new WebSocket(URL);
@@ -34,6 +34,9 @@ class MySocket extends Component {
     time: [],
     predictions: [],
     outputNames: [],
+    model: null,
+    outputIndex: 0,
+    inputIndexes: [],
     selectedSources: [],
     horizontal_line: [],
     subscribedSources: {
@@ -60,7 +63,7 @@ class MySocket extends Component {
     }
   };
 
-  predict(dataPoint) {
+  predictValue(dataPoint) {
     /* NEED TO BE FIXED
     if (true) {
       dataPoint = standardizeData([dataPoint]);
@@ -69,13 +72,17 @@ class MySocket extends Component {
     }
     */
 
-    const prediction = model
-      .predict(tf.tensor2d([dataPoint], [1, dataPoint.length]))
-      .dataSync();
-    if (prediction.length === 1) {
-      return prediction[0];
-    } else {
-      return prediction;
+    if (this.state.model) {
+      // model is a promise
+      // console.log(this.props.model); MODLE IS A PROMISE
+      const prediction = this.state.model
+        .predict(tf.tensor2d([dataPoint], [1, dataPoint.length]))
+        .dataSync();
+      if (prediction.length === 1) {
+        return prediction[0];
+      } else {
+        return prediction;
+      }
     }
   }
 
@@ -123,10 +130,28 @@ class MySocket extends Component {
     (async () => {
       const project = this.props.project;
       // model = await tf.loadLayersModel("indexeddb://" + project + "/model");
+      const model = await fetchModel();
+      const config = await fetchConfig();
+
+      this.setState({
+        config: config,
+        model: model
+      });
+
       await fetchAuthCookie();
       const topicsJSON = await fetchTopics();
+      let outputNames = topicsJSON["0000"].output_names;
+      let inputIndexes = [];
+      for (let i = 0; i < config.input.length; i++) {
+        let index = outputNames.indexOf(config.input[i]);
+        inputIndexes.push(index);
+      }
+      let outputIndex = outputNames.indexOf(config.output[0]);
+
       this.setState({
-        outputNames: topicsJSON["0000"].output_names
+        outputNames: topicsJSON["0000"].output_names,
+        outputIndex: outputIndex,
+        inputIndexes: inputIndexes
       }); // hard coded "0000"
       console.log("topicsJSON", topicsJSON); // HER ARE THE NAMES, INSIDE THIS ONE
       // console.log("FETCHING TOPICS", topicsJSON);
@@ -177,17 +202,23 @@ class MySocket extends Component {
       this.initParser();
     };
 
+    let counter = 0;
     this.ws.onmessage = evt => {
       // on receiving a message, add it to the list of messages
-      if (evt.data.byteLength > 0) {
-        const data = evt.data;
-        let decoder = new TextDecoder("utf-8");
+      if (counter === 0) {
+        if (evt.data.byteLength > 0) {
+          const data = evt.data;
+          let decoder = new TextDecoder("utf-8");
+          console.log(data);
 
-        const sourceID = decoder.decode(new Uint8Array(data, 0, 4));
-        this.parseData(data.slice(4), sourceID);
-      } else {
-        console.log("pong"); // why pong?
+          const sourceID = decoder.decode(new Uint8Array(data, 0, 4));
+          this.parseData(data.slice(4), sourceID);
+        } else {
+          console.log("pong"); // why pong?
+        }
       }
+      counter += 1;
+      counter = counter % 10;
     };
 
     this.ws.onclose = () => {
@@ -208,6 +239,7 @@ class MySocket extends Component {
   };
 
   parseData = (data, sourceID) => {
+    let counter = 0;
     // console.log(data);
     const sourceBuffer = this.state.sourceBuffers[sourceID];
     if (sourceBuffer === undefined) {
@@ -226,7 +258,7 @@ class MySocket extends Component {
     while (unpacked) {
       // NEED TO SYNCRONIZE TO GET CORRECT DATE
       // FIX THIS STUFF BELOW
-
+      console.log("datapoibt");
       sourceBuffer.x_buffer.push(new Date(unpacked[0] * 1000));
       const channelsIds = this.state.subscribedSources[sourceID].channels.map(
         it => it.id
@@ -236,7 +268,13 @@ class MySocket extends Component {
       });
 
       unpacked = unpackIterator.next().value;
-      if (unpacked && unpacked.length > 0) {
+      if (this.state.model && unpacked && unpacked.length > 0) {
+        let x = []; // input values
+
+        // have to add 3 because CATMAN adds a header for the first 3 values
+        this.state.inputIndexes.forEach(index => x.push(unpacked[index + 3]));
+        let output = unpacked[this.state.outputIndex + 3];
+        console.log(output);
         // const timestamp = unpacked[LASTONE]
         // const otherSelectedSources må også være med
         // data has 3 values, then the names start
@@ -245,16 +283,35 @@ class MySocket extends Component {
           let d = this.state.data;
           let e = this.state.time;
           d.shift();
-          d.concat(unpacked[6]);
+          d.concat(output);
           e.shift();
           e.concat(new Date(unpacked[14] * 1000));
+
           this.setState({
             data: d,
             time: e
           });
+          if (this.state.model) {
+            let predictedVal = this.predictValue(x);
+            const predictions = this.state.predictions.concat(predictedVal);
+            this.setState({
+              predictions: predictions
+            });
+          } else {
+            console.log("no model");
+          }
         } else {
-          const data = this.state.data.concat(unpacked[6]);
+          const data = this.state.data.concat(output);
           const time = this.state.time.concat(new Date(unpacked[14] * 1000));
+          if (this.state.model) {
+            let predictedVal = this.predictValue(x);
+            const predictions = this.state.predictions.concat(predictedVal);
+            this.setState({
+              predictions
+            });
+          } else {
+            console.log("no model");
+          }
           // const horizontal_line = this.state.horizontal_line.concat(200);
           this.setState({
             data: data,
@@ -262,9 +319,9 @@ class MySocket extends Component {
           });
         }
         // console.log("ARRAY", array2);
-        // const predictions = this.state.predictions.concat(this.predict(array2));
         // console  .log(data);
       }
+      break;
     }
   };
 
@@ -317,7 +374,11 @@ class MySocket extends Component {
         <PlotIt
           dataPoints={[
             { y: this.state.data, x: this.state.time },
-            { y: this.state.predictions, marker: { color: "red" } }
+            {
+              y: this.state.predictions,
+              x: this.state.time,
+              marker: { color: "red" }
+            }
           ]}
         />
       </div>

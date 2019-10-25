@@ -1,6 +1,7 @@
 import sensorsStore from "./sensorsStore";
 import { storage } from "../../firebase";
 import { csv } from "d3";
+import * as tf from "@tensorflow/tfjs";
 
 function addConfigVariable(variable, value) {
   let config = sensorsStore.getState().config;
@@ -86,6 +87,32 @@ export function setMinValue(sensor, minValue) {
 
 export function setMaxValue(sensor, maxValue) {
   console.log(maxValue); // figure out where to store this
+}
+
+export async function fetchModel() {
+  let projectName = sensorsStore.getState().config.projectName;
+  try {
+    const model = await tf.loadLayersModel(
+      "indexeddb://" + "legenden" + "/model"
+    );
+    return model;
+  } catch (err) {
+    console.error(err);
+  } finally {
+    console.log("hmm");
+  }
+}
+
+export async function fetchConfig() {
+  let config = sensorsStore.getState().config;
+  if (config.projectName.length === 0) {
+    const downloadRefConfig = storage.ref(`${"legenden"}/config.json`);
+    return downloadRefConfig.getDownloadURL().then(async url => {
+      return fetch(url).then(response => response.json());
+    });
+  } else {
+    return config;
+  }
 }
 
 export function setProjectName(value) {
