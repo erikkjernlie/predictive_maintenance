@@ -1,8 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  useDataPoints,
-  useConfig,
-} from "../../stores/sensors/sensorsStore";
+import { useDataPoints, useConfig } from "../../stores/sensors/sensorsStore";
 import { storage } from "../../firebase";
 import MySocket from "../../Components/Livestream/MySocket";
 
@@ -29,7 +26,13 @@ import {
   shuffleData
 } from "./statisticsLib.js";
 
-import { loadConfig, loadData, uploadData, uploadConfig, loadConfigMod } from "./transferLib.js";
+import {
+  loadConfig,
+  loadData,
+  uploadData,
+  uploadConfig,
+  loadConfigMod
+} from "./transferLib.js";
 import {
   getFeatureTargetSplit,
   getTestTrainSplit,
@@ -104,7 +107,7 @@ const CurrentProject = ({ match }) => {
 
     let i = 0;
     x_real.forEach(p => {
-      console.log("p", p)
+      console.log("p", p);
       let prediction = model
         .predict(tf.tensor2d([p], [1, p.length]))
         .dataSync();
@@ -125,7 +128,7 @@ const CurrentProject = ({ match }) => {
 
     await loadConfigMod(projectName, setSensorData);
     await loadData(projectName, setDataPoints);
-    setSensors(sensorData.sensorNames)
+    setSensors(sensorData.sensorNames);
     console.log("dataPoints", dataPoints);
     console.log("sensorData", sensorData);
     console.log("sensors", sensors);
@@ -146,6 +149,11 @@ const CurrentProject = ({ match }) => {
       {loading && <div>Loading data...</div>}
       {projectName === undefined && lastLoadedProjectName.length === 0 && (
         <div>You currently have no current project selected. </div>
+      )}
+      {!loading && (
+        <div>
+          <MySocket />
+        </div>
       )}
       {!loading && (
         <div>
@@ -188,11 +196,6 @@ const CurrentProject = ({ match }) => {
               sensors={sensors}
             />
           </div>
-        </div>
-      )}
-      {!loading && (
-        <div>
-          <MySocket />
         </div>
       )}
     </div>
