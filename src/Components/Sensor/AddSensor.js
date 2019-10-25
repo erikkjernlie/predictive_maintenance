@@ -7,34 +7,54 @@ import {
   setMinValue,
   setMaxValue
 } from "../../stores/sensors/sensorsActions";
+import { useConfig } from "../../stores/sensors/sensorsStore";
 
 const AddSensor = props => {
   const [inputSensor, setInputSensor] = useState(false);
   const [outputSensor, setOutputSensor] = useState(false);
   const [internalSensor, setInternalSensor] = useState(false);
   const [unit, setUnit] = useState("");
+  const [min, setMin] = useState(null);
+  const [max, setMax] = useState(null);
+
+  const config = useConfig();
+  console.log(config);
 
   const handleUnit = e => {
     if (e.target.value) {
       setUnit(e.target.value);
     }
     if (inputSensor) {
-      addSensor(props.sensor, "input", unit);
+      addSensor(props.sensor, "input", unit, min, max);
     } else if (outputSensor) {
-      addSensor(props.sensor, "output", unit);
+      addSensor(props.sensor, "output", unit, min, max);
     } else if (internalSensor) {
-      addSensor(props.sensor, "internal", unit);
+      addSensor(props.sensor, "internal", unit, min, max);
     } else {
-      addSensor(props.sensor, "input", unit);
+      addSensor(props.sensor, "input", unit, min, max);
     }
   };
 
   const handleMinValue = e => {
-    setMinValue(props.sensor, e.target.value); // might need to be converted to float
+    if (inputSensor) {
+      addSensor(props.sensor, "input", unit, e.target.value, max); // might need to be converted to float
+    } else if (outputSensor) {
+      addSensor(props.sensor, "output", unit, e.target.value, max); // might need to be converted to float
+    } else {
+      addSensor(props.sensor, "internal", unit, e.target.value, max); // might need to be converted to float
+    }
+    setMin(e.target.value);
   };
 
   const handleMaxValue = e => {
-    setMaxValue(props.sensor, e.target.value); // might need to be converted to float
+    if (inputSensor) {
+      addSensor(props.sensor, "input", unit, min, e.target.value); // might need to be converted to float
+    } else if (outputSensor) {
+      addSensor(props.sensor, "output", unit, min, e.target.value); // might need to be converted to float
+    } else {
+      addSensor(props.sensor, "internal", unit, min, e.target.value); // might need to be converted to float
+    }
+    setMax(e.target.value);
   };
 
   const changeSensor = number => {

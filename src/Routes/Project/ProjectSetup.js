@@ -13,7 +13,9 @@ import {
   setLiveFeedURL,
   setProjectName,
   setDataPoints,
-  setSensorNames
+  setSensorNames,
+  setPredictedValueAbsoluteError,
+  setPredictedValuePercentageError
 } from "../../stores/sensors/sensorsActions";
 import { min } from "simple-statistics";
 import { Checkbox } from "@material-ui/core";
@@ -185,12 +187,16 @@ const ProjectSetup = props => {
                 On your predicted value, how much difference do you allow before
                 you consider it a failure?
               </div>
-              <input />{" "}
-              {/* need functionality here - set the value in config -> can be used when making predictions */}
-              <select>
-                <option value="tbd">Percentage</option>
-                <option value="tbd">Absolute</option>
-              </select>
+              Percentage:{" "}
+              <input
+                type="number"
+                onChange={e => setPredictedValuePercentageError(e.target.value)}
+              />
+              Absolute:{" "}
+              <input
+                type="number"
+                onChange={e => setPredictedValueAbsoluteError(e.target.value)}
+              />
             </div>
             <button onClick={startTraining}>Start training your model</button>
             {startingTraining && <div>Loading...</div>}

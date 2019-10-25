@@ -57,7 +57,7 @@ export function setData(value) {
   });
 }
 
-export function addSensor(sensor, type, unit) {
+export function addSensor(sensor, type, unit, min, max) {
   let config = sensorsStore.getState().config;
   config["sensors"].forEach(function(x, index) {
     if (x.name === sensor) {
@@ -67,7 +67,9 @@ export function addSensor(sensor, type, unit) {
   config["sensors"] = config["sensors"].concat({
     name: sensor,
     type: type,
-    unit: unit
+    unit: unit,
+    min: min,
+    max: max
   });
   resetSensors();
   config["sensors"].forEach(sensor => {
@@ -91,6 +93,12 @@ export function setProjectName(value) {
 }
 export function setLiveFeedURL(value) {
   setConfigVariable("liveFeedURL", value);
+}
+export function setPredictedValueAbsoluteError(value) {
+  setConfigVariable("predictedValueAbsoluteError", value);
+}
+export function setPredictedValuePercentageError(value) {
+  setConfigVariable("predictedValuePercentageError", value);
 }
 export function setDifferentValueRanges(value) {
   setConfigVariable("differentValueRanges", value);

@@ -11,11 +11,12 @@ const store = createStore({
     sensors: [],
     sensorNames: [],
     projectName: "",
-    URLtoLiveFeed: "",
-    differentValueRanges: false, 
+    differentValueRanges: false,
     reduceTrainingTime: false,
     isComplex: false,
     data: [],
+    predictedValueAbsoluteError: 0,
+    predictedValuePercentageError: 0
   },
   configProcessed: {
     input: [],
@@ -24,11 +25,12 @@ const store = createStore({
     sensors: [],
     sensorNames: [],
     projectName: "",
-    URLtoLiveFeed: "",
-    differentValueRanges: false, 
+    differentValueRanges: false,
     reduceTrainingTime: false,
     isComplex: false,
     data: [],
+    predictedValueAbsoluteError: 0,
+    predictedValuePercentageError: 0
   }
 });
 
