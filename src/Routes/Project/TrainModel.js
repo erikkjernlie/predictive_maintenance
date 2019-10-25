@@ -21,11 +21,16 @@ import {
 } from "./statisticsLib.js";
 import {
   setDataPointsProcessed,
-  setConfigProcessed,
+  setConfigProcessed
 } from "../../stores/sensors/sensorsActions";
 import { loadConfig, loadData, uploadConfigMod } from "./transferLib.js";
-import { getFeatureTargetSplit, getTestTrainSplit, convertToTensors, getBasicModel, getComplexModel } from "./machineLearningLib.js";
-
+import {
+  getFeatureTargetSplit,
+  getTestTrainSplit,
+  convertToTensors,
+  getBasicModel,
+  getComplexModel
+} from "./machineLearningLib.js";
 
 // 1. "My dataset has columns with very different value ranges" --> true: standardization, false: normalzation
 // 2. "My dataset is very complex" --> true: flere/bredere lag, false: standard modell
@@ -38,13 +43,15 @@ const modelParams = {
   epochs: 20,
   optimizer: tf.train.adam(0.01),
   loss: "meanSquaredError",
-  min_R2_score: 0.5
+  min_R2_score: 0.5,
+  decent_R2_score: 0.75 // change this to a fair value
 };
 
 const TrainModel = ({ match }) => {
-
   const configProcessed = useConfigProcessed();
   const dataPointsProcessed = useDataPointsProcessed();
+
+  const [R2, setR2] = useState(-1000);
 
   let config;
   let dataPoints;
@@ -62,7 +69,7 @@ const TrainModel = ({ match }) => {
   async function fetchData() {
     await loadConfig(projectName, setConf);
     await loadData(projectName, setDataP);
-    console.log("dataP", dataPoints)
+    console.log("dataP", dataPoints);
     console.log("conf", config);
   }
 
@@ -110,10 +117,10 @@ const TrainModel = ({ match }) => {
     console.log("testFeatures", tensors.testFeatures);
     console.log("trainTargets", tensors.trainTargets);
     console.log("testTargets", tensors.testTargets);
-    let r2 = -1000;
     let model;
     let predictions;
-    while (r2 < modelParams.min_R2_score) {
+    let tempR2 = -1000;
+    while (tempR2 < modelParams.min_R2_score) {
       model = await trainModel(
         tensors.trainFeatures,
         tensors.trainTargets,
@@ -123,8 +130,8 @@ const TrainModel = ({ match }) => {
       );
       predictions = model.predict(tensors.testFeatures);
       //console.log("PREDICT", predictions);
-      r2 = getR2Score(predictions.arraySync(), y_test).rSquared;
-      console.log("R2 score: ", r2);
+      tempR2 = getR2Score(predictions.arraySync(), y_test).rSquared;
+      setR2(tempR2);
     }
     uploadConfigMod(config, config.projectName);
     setDataPointsProcessed(dataPoints);
@@ -190,21 +197,19 @@ const TrainModel = ({ match }) => {
 
   return (
     <div className="Sensors">
-      {/*<div>
-        {models.map(model => (
-          <div>
-            {
-              model
-                .predict(tf.tensor2d([[7.207286, 1.844344]], [1, 2]))
-                .dataSync()[0]
-            }
-            ;
-          </div>
-        ))}
-        </div>*/}
       <div>
         <div>Configuration</div>
         <div>Start training TrainModel</div>
+        {R2 >= modelParams.decent_R2_score && (
+          <div style={{ backgroundColor: "green", padding: "5px" }}>
+            Your training turned out fine.
+          </div>
+        )}
+        {R2 >= modelParams.min_R2_score && R2 < modelParams.decent_R2_score && (
+          <div style={{ backgroundColor: "yellow", padding: "5px" }}>
+            Your training is not very good - try to change some settings.
+          </div>
+        )}
         <Link to={"/" + projectName}>
           <button>See data and visualization</button>
         </Link>
@@ -219,28 +224,6 @@ const TrainModel = ({ match }) => {
           <div className="canvases" id="accuracyCanvas"></div>
         </div>
       </div>
-      {/*<div className="SensorsList">
-        {sensors.map(sensor => (
-          <div
-            className={currentSensor === sensor ? "SelectedSensor" : ""}
-            onClick={() => {
-              setCurrentSensor(sensor);
-            }}
-          >
-            {sensor}
-          </div>
-        ))}
-      </div>
-      {currentSensor && (
-        <div className="CurrentSensor">
-          <Sensor
-            sensor={currentSensor}
-            dataPoints={dataPoints}
-            sensors={sensors}
-          />
-        </div>
-      )}
-      */}
     </div>
   );
 };
