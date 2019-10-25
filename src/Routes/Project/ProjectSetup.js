@@ -5,10 +5,7 @@ import { setTimeout } from "timers";
 import { csv } from "d3";
 import AddSensor from "../../Components/Sensor/AddSensor";
 import CSVReader from "react-csv-reader";
-import {
-  useConfig,
-  useDataPoints,
-} from "../../stores/sensors/sensorsStore";
+import { useConfig, useDataPoints } from "../../stores/sensors/sensorsStore";
 import {
   setIsComplex,
   setReduceTrainingTime,
@@ -16,7 +13,7 @@ import {
   setLiveFeedURL,
   setProjectName,
   setDataPoints,
-  setSensorNames,
+  setSensorNames
 } from "../../stores/sensors/sensorsActions";
 import { min } from "simple-statistics";
 import { Checkbox } from "@material-ui/core";
@@ -29,7 +26,9 @@ const ProjectSetup = props => {
   const [selectedDataset, setSelectedDataset] = useState(false);
   const [startingTraining, setStartingTraining] = useState(false);
 
-  const [localDifferentValueRanges, setLocalDifferentValueRanges] = useState(false);
+  const [localDifferentValueRanges, setLocalDifferentValueRanges] = useState(
+    false
+  );
   const [localIsComplex, setLocalIsComplex] = useState(false);
   const [localReduceTrainingTime, setLocalReduceTrainingTime] = useState(false);
 
@@ -61,12 +60,12 @@ const ProjectSetup = props => {
     setSelectedDataset(true);
     setDataPoints(data);
     setSensorNames(data[0]);
-  }
+  };
 
   const handleUpload = () => {
     setUploading(true);
     uploadData(dataPoints, config["projectName"], setProgress);
-    uploadConfig(config, config["projectName"], setProgress)
+    uploadConfig(config, config["projectName"], setProgress);
     setUploading(false);
 
     if (config.projectName.length > 0) {
@@ -82,7 +81,7 @@ const ProjectSetup = props => {
     setTimeout(() => {
       props.history.push(config.projectName + "/configuration");
     }, 500);
-  }
+  };
 
   const changeDatasetFact = id => {
     switch (id) {
@@ -137,6 +136,8 @@ const ProjectSetup = props => {
                   <th className="TableField">output</th>
                   <th className="TableField">internal sensor</th>
                   <th className="TableField">Unit</th>
+                  <th className="TableField">Min-value</th>
+                  <th className="TableField">Max-value</th>
                 </tr>
                 {config.sensorNames &&
                   config.sensorNames.map(sensor => (
@@ -178,6 +179,18 @@ const ProjectSetup = props => {
                 checked={localReduceTrainingTime}
                 onClick={() => changeDatasetFact("reduceTrainingTime")}
               />
+            </div>
+            <div className="Setup__ProjectName">
+              <div>
+                On your predicted value, how much difference do you allow before
+                you consider it a failure?
+              </div>
+              <input />{" "}
+              {/* need functionality here - set the value in config -> can be used when making predictions */}
+              <select>
+                <option value="tbd">Percentage</option>
+                <option value="tbd">Absolute</option>
+              </select>
             </div>
             <button onClick={startTraining}>Start training your model</button>
             {startingTraining && <div>Loading...</div>}

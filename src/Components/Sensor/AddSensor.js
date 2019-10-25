@@ -2,7 +2,11 @@ import React, { useState } from "react";
 
 import { Checkbox } from "@material-ui/core";
 import { saveSensorData } from "../../stores/sensors/sensorsActions";
-import { addSensor } from "../../stores/sensors/sensorsActions";
+import {
+  addSensor,
+  setMinValue,
+  setMaxValue
+} from "../../stores/sensors/sensorsActions";
 
 const AddSensor = props => {
   const [inputSensor, setInputSensor] = useState(false);
@@ -23,6 +27,14 @@ const AddSensor = props => {
     } else {
       addSensor(props.sensor, "input", unit);
     }
+  };
+
+  const handleMinValue = e => {
+    setMinValue(props.sensor, e.target.value); // might need to be converted to float
+  };
+
+  const handleMaxValue = e => {
+    setMaxValue(props.sensor, e.target.value); // might need to be converted to float
   };
 
   const changeSensor = number => {
@@ -83,6 +95,12 @@ const AddSensor = props => {
       </td>
       <td>
         <input onChange={handleUnit} />
+      </td>
+      <td>
+        <input onChange={handleMinValue} />
+      </td>
+      <td>
+        <input onChange={handleMaxValue} />
       </td>
     </tr>
   );

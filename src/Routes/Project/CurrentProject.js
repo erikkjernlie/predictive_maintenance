@@ -65,6 +65,7 @@ async function setModel(project) {
 const CurrentProject = ({ match }) => {
   const { projectName } = match.params;
   const [currentSensor, setCurrentSensor] = useState("");
+  const conf = useConfig();
 
   const [loading, setLoading] = useState(false);
 
@@ -139,6 +140,7 @@ const CurrentProject = ({ match }) => {
 
   useEffect(() => {
     doStuff();
+    console.log(conf);
   }, []);
 
   return (
@@ -152,7 +154,7 @@ const CurrentProject = ({ match }) => {
       )}
       {!loading && (
         <div>
-          <MySocket />
+          <MySocket conf={conf} />
         </div>
       )}
       {!loading && (

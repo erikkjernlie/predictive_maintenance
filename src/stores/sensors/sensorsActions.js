@@ -7,14 +7,14 @@ function addConfigVariable(variable, value) {
   config[variable] = config[variable].concat(value);
   sensorsStore.setState({
     config: config
-  })
+  });
 }
 function setConfigVariable(variable, value) {
   let config = sensorsStore.getState().config;
   config[variable] = value;
   sensorsStore.setState({
     config: config
-  })
+  });
 }
 export function setSensorNames(value) {
   addConfigVariable("sensorNames", value);
@@ -46,7 +46,7 @@ function resetSensors() {
   config["internal"] = [];
   sensorsStore.setState({
     config: config
-  })
+  });
 }
 
 export function setData(value) {
@@ -59,11 +59,11 @@ export function setData(value) {
 
 export function addSensor(sensor, type, unit) {
   let config = sensorsStore.getState().config;
-  config["sensors"].forEach(function (x, index) {
+  config["sensors"].forEach(function(x, index) {
     if (x.name === sensor) {
       config["sensors"].splice(index, 1);
     }
-  })
+  });
   config["sensors"] = config["sensors"].concat({
     name: sensor,
     type: type,
@@ -72,13 +72,22 @@ export function addSensor(sensor, type, unit) {
   resetSensors();
   config["sensors"].forEach(sensor => {
     config[sensor.type] = config[sensor.type].concat(sensor.name);
-  })
+  });
   sensorsStore.setState({
     config: config
   });
 }
+
+export function setMinValue(sensor, minValue) {
+  console.log(minValue); // figure out where to store this
+}
+
+export function setMaxValue(sensor, maxValue) {
+  console.log(maxValue); // figure out where to store this
+}
+
 export function setProjectName(value) {
-  setConfigVariable("projectName", value)
+  setConfigVariable("projectName", value);
 }
 export function setLiveFeedURL(value) {
   setConfigVariable("liveFeedURL", value);
@@ -95,10 +104,10 @@ export function setIsComplex(value) {
 export function setConfig(value) {
   sensorsStore.setState({
     config: value
-  })
+  });
 }
 export function setConfigProcessed(value) {
   sensorsStore.setState({
     configProcessed: value
-  })
+  });
 }
