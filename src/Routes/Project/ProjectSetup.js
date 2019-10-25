@@ -6,43 +6,42 @@ import { csv } from "d3";
 import AddSensor from "../../Components/Sensor/AddSensor";
 import CSVReader from "react-csv-reader";
 import {
-  useSensorData,
-  useProjectName
+  useConfig,
+  useDataPoints,
 } from "../../stores/sensors/sensorsStore";
 import {
-  setDatapoints,
-  setSensors,
+  setIsComplex,
+  setReduceTrainingTime,
+  setDifferentValueRanges,
   setLiveFeedURL,
-  createProjectName,
-  setConfig
+  setProjectName,
+  setDataPoints,
+  setSensorNames,
 } from "../../stores/sensors/sensorsActions";
 import { min } from "simple-statistics";
 import { Checkbox } from "@material-ui/core";
 import { uploadData, uploadConfig } from "./transferLib.js";
 
 const ProjectSetup = props => {
-  const [file, setFile] = useState(null);
   const [progress, setProgress] = useState(0);
 
   const [uploading, setUploading] = useState(false);
-  const [sensorNames, setSensorNames] = useState([]);
   const [selectedDataset, setSelectedDataset] = useState(false);
   const [startingTraining, setStartingTraining] = useState(false);
 
-  const [hasDifferentValueRanges, setHasDifferentValueRanges] = useState(false);
-  const [isComplex, setIsComplex] = useState(false);
-  const [reduceTrainingTime, setReduceTrainingTime] = useState(false);
+  const [localDifferentValueRanges, setLocalDifferentValueRanges] = useState(false);
+  const [localIsComplex, setLocalIsComplex] = useState(false);
+  const [localReduceTrainingTime, setLocalReduceTrainingTime] = useState(false);
 
   const [lastStep, setLastStep] = useState(false);
   const [step2, setStep2] = useState(false);
 
-  const sensorData = useSensorData();
-
-  const projectName = useProjectName();
+  const config = useConfig();
+  const dataPoints = useDataPoints();
 
   const handleProjectName = e => {
     if (e.target.value) {
-      createProjectName(e.target.value);
+      setProjectName(e.target.value);
     }
   };
 
@@ -55,55 +54,49 @@ const ProjectSetup = props => {
 
   const startTraining = () => {
     setStartingTraining(true);
-    console.log("start training with sensor data", sensorData);
     handleUpload();
   };
 
   const selectDataset = data => {
     setSelectedDataset(true);
-    let sensorNames = data[0];
-    setDatapoints(data);
-    setSensorNames(sensorNames);
-    setSensors(sensorNames);
-    createProjectName(projectName);
-    let rows_joined = data.map(x => x.join(","))
-    let csvstr = rows_joined.join("\n")
-    setFile(csvstr)
+    setDataPoints(data);
+    setSensorNames(data[0]);
   }
 
   const handleUpload = () => {
     setUploading(true);
-    uploadData(file, projectName, setProgress);
-    uploadConfig(JSON.stringify(sensorData), projectName, setProgress)
+    uploadData(dataPoints, config["projectName"], setProgress);
+    uploadConfig(config, config["projectName"], setProgress)
     setUploading(false);
-    if (projectName.length > 0) {
+
+    if (config.projectName.length > 0) {
       if (localStorage.getItem("projects")) {
         localStorage.setItem(
           "projects",
-          localStorage.getItem("projects") + " " + projectName
+          localStorage.getItem("projects") + " " + config.projectName
         );
       } else {
-        localStorage.setItem("projects", projectName);
+        localStorage.setItem("projects", config.projectName);
       }
     }
     setTimeout(() => {
-      props.history.push(projectName + "/configuration");
+      props.history.push(config.projectName + "/configuration");
     }, 500);
   }
 
   const changeDatasetFact = id => {
     switch (id) {
       case "reduceTrainingTime":
-        setConfig("reduceTrainingTime", !reduceTrainingTime);
-        setReduceTrainingTime(!reduceTrainingTime);
+        setReduceTrainingTime(!localReduceTrainingTime);
+        setLocalReduceTrainingTime(!localReduceTrainingTime);
         break;
       case "isComplex":
-        setConfig("isComplex", !isComplex);
-        setIsComplex(!isComplex);
+        setIsComplex(!localIsComplex);
+        setLocalIsComplex(!localIsComplex);
         break;
-      case "hasDifferentValueRanges":
-        setConfig("hasDifferentValueRanges", !hasDifferentValueRanges);
-        setHasDifferentValueRanges(!hasDifferentValueRanges);
+      case "differentValueRanges":
+        setDifferentValueRanges(!localDifferentValueRanges);
+        setLocalDifferentValueRanges(!localDifferentValueRanges);
         break;
       default:
         break;
@@ -145,8 +138,8 @@ const ProjectSetup = props => {
                   <th className="TableField">internal sensor</th>
                   <th className="TableField">Unit</th>
                 </tr>
-                {sensorNames &&
-                  sensorNames.map(sensor => (
+                {config.sensorNames &&
+                  config.sensorNames.map(sensor => (
                     <AddSensor key={sensor} sensor={sensor} />
                   ))}
               </tbody>
@@ -163,15 +156,15 @@ const ProjectSetup = props => {
               </div>
               <Checkbox
                 color="default"
-                checked={hasDifferentValueRanges}
-                onClick={() => changeDatasetFact("hasDifferentValueRanges")}
+                checked={localDifferentValueRanges}
+                onClick={() => changeDatasetFact("differentValueRanges")}
               />
             </div>
             <div className="Setup__ProjectName">
               <div>Is the very dataset very complex?</div>
               <Checkbox
                 color="default"
-                checked={isComplex}
+                checked={localIsComplex}
                 onClick={() => changeDatasetFact("isComplex")}
               />
             </div>
@@ -182,7 +175,7 @@ const ProjectSetup = props => {
               </div>
               <Checkbox
                 color="default"
-                checked={reduceTrainingTime}
+                checked={localReduceTrainingTime}
                 onClick={() => changeDatasetFact("reduceTrainingTime")}
               />
             </div>

@@ -1,13 +1,7 @@
 import React, { useEffect, useState } from "react";
-/*import {
-  useDataPoints,
-  useSensorNames,
-  useProjectName,
-  useSensorData
-} from "../../stores/sensors/sensorsStore";*/
 import {
-  useProjectName,
-  useSensorNames
+  useDataPoints,
+  useConfig,
 } from "../../stores/sensors/sensorsStore";
 import { storage } from "../../firebase";
 import MySocket from "../../Components/Livestream/MySocket";
@@ -31,11 +25,11 @@ import {
   standardizeData,
   getCovarianceMatrix,
   getDatasetByColumns,
-  discardCovariantColumns,
+  getReducedDataset,
   shuffleData
 } from "./statisticsLib.js";
 
-import { setConfig, setData, uploadData, uploadConfig } from "./transferLib.js";
+import { loadConfig, loadData, uploadData, uploadConfig, loadConfigMod } from "./transferLib.js";
 import {
   getFeatureTargetSplit,
   getTestTrainSplit,
@@ -66,16 +60,12 @@ async function setModel(project) {
 }
 
 const CurrentProject = ({ match }) => {
-  //const dataPoints = useDataPoints();
-  const sensorNames = useSensorNames();
-  //const sensorData = useSensorData();
-  // PROJECTNAME const p = useSensorNames();
   const { projectName } = match.params;
-  const [currentSensor, setCurrentSensor] = useState(sensorNames[0]);
+  const [currentSensor, setCurrentSensor] = useState("");
 
   const [loading, setLoading] = useState(false);
 
-  const lastLoadedProjectName = useProjectName();
+  const lastLoadedProjectName = projectName;
 
   let plot_y = [];
   let plot_pred = [];
@@ -114,6 +104,7 @@ const CurrentProject = ({ match }) => {
 
     let i = 0;
     x_real.forEach(p => {
+      console.log("p", p)
       let prediction = model
         .predict(tf.tensor2d([p], [1, p.length]))
         .dataSync();
@@ -132,8 +123,9 @@ const CurrentProject = ({ match }) => {
     console.log("LAST LOADED", projectName);
     setLoading(true);
 
-    await setConfig(projectName, setSensorData);
-    await setData(projectName, setDataPoints, setSensors);
+    await loadConfigMod(projectName, setSensorData);
+    await loadData(projectName, setDataPoints);
+    setSensors(sensorData.sensorNames)
     console.log("dataPoints", dataPoints);
     console.log("sensorData", sensorData);
     console.log("sensors", sensors);

@@ -34,26 +34,38 @@ export function getCovarianceMatrix(dataset) {
     return covariances
   }
 
-export function discardCovariantColumns(dataset) {
+export function getReducedDataset(dataset) {
     const cov = getCovarianceMatrix(dataset)
     let clone = JSON.parse(JSON.stringify(dataset));
     for (var i = 0; i < dataset[0].length; i++) {
       for (var j = i+1; j < dataset[0].length; j++) {
         if (cov[i][j] > 0.90) {
-          clone = clone.map(x => x.slice(0,i).concat(x.slice(i+1)))
+          clone = clone.map(x => x.slice(0,i).concat(x.slice(i+1)));
         }
       }
     }
     return clone
   }
 
-export function standardizeData(dataset) {
-    const numberOfColumns = dataset[0].length
-    const numberOfRows = dataset.length
+export function fillConfig(data, config) {
+  Object.keys(data[0]).forEach(function (key) {
+    let column = data.map(x => Number(x[key]));
+    let index = config.sensors.findIndex(sensor => sensor.name === key);
+    config.sensors[index]["mean"] = mean(column);
+    config.sensors[index]["std"] = standardDeviation(column);
+    config.sensors[index]["max"] = max(column);
+    config.sensors[index]["min"] = min(column);
+  });
+  console.log(config);
+}
+
+export function standardizeData(data) {
+    const numberOfColumns = data[0].length
+    const numberOfRows = data.length
     let meanvals = []
     let stdvals = []
     for (var k = 0; k < numberOfColumns; k++) {
-      const col = dataset.map(x => x[k])
+      const col = data.map(x => x[k])
       meanvals.push(mean(col))
       stdvals.push(standardDeviation(col))
     }
@@ -61,7 +73,7 @@ export function standardizeData(dataset) {
     for (var i = 0; i < numberOfRows; i++) {
       const row = []
       for (var j = 0; j < numberOfColumns; j++) {
-        row.push((dataset[i][j] - meanvals[j])/(stdvals[j]))
+        row.push((data[i][j] - meanvals[j])/(stdvals[j]))
       }
       standardized.push(row)
     }
@@ -93,26 +105,21 @@ export function getR2Score(predict, data) {
     data = data.map(x => Number(x));
     predict = predict.map(x => Number(x))
 
-    var meanValue = 0; // MEAN VALUE
-    var SStot = 0; // THE TOTAL SUM OF THE SQUARES
-    var SSres = 0; // RESIDUAL SUM OF SQUARES
+    var meanValue = 0;
+    var SStot = 0;
+    var SSres = 0;
     var rSquared = 0;
 
-    // SUM ALL VALUES
     for (var n = 0; n < data.length; n++) { 
       meanValue += data[n];
     }
-    // GET MEAN VALUE 
     meanValue = (meanValue / data.length);
 
     for (var m = 0; m < data.length; m++) {
-      // CALCULATE THE SSTOTAL
       SStot += Math.pow(data[m] - meanValue, 2); 
-      // CALCULATE THE SSRES
       SSres += Math.pow(predict[m] - data[m], 2);
     }
 
-    // R SQUARED
     rSquared = 1 - (SSres / SStot);
     
     return {
