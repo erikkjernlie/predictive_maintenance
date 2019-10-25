@@ -50,11 +50,16 @@ export function getReducedDataset(dataset) {
 export function fillConfig(data, config) {
   Object.keys(data[0]).forEach(function (key) {
     let column = data.map(x => Number(x[key]));
-    let index = config.sensors.findIndex(sensor => sensor.name === key);
-    config.sensors[index]["mean"] = mean(column);
-    config.sensors[index]["std"] = standardDeviation(column);
-    config.sensors[index]["max"] = max(column);
-    config.sensors[index]["min"] = min(column);
+    let mean_val = mean(column);
+    let standardDeviation_val = standardDeviation(column);
+    let max_val = max(column);
+    let min_val = min(column);
+    config.sensors[key]["mean"] = mean_val;
+    config.sensors[key]["std"] = standardDeviation_val;
+    config.sensors[key]["max"] = max_val;
+    config.sensors[key]["min"] = min_val;
+    config.sensors[key]["standardize"] = (x) => ((x - mean_val)/standardDeviation_val);
+    config.sensors[key]["normalize"] = (x) => ((x - min_val)/(max_val - min_val));
   });
   console.log(config);
 }

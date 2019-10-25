@@ -65,6 +65,7 @@ const ProjectSetup = props => {
   };
 
   const handleUpload = () => {
+    console.log(config);
     setUploading(true);
     uploadData(dataPoints, config["projectName"], setProgress);
     uploadConfig(config, config["projectName"], setProgress);

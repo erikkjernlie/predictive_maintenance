@@ -133,6 +133,7 @@ const TrainModel = ({ match }) => {
       predictions = model.predict(tensors.testFeatures);
       //console.log("PREDICT", predictions);
       tempR2 = getR2Score(predictions.arraySync(), y_test).rSquared;
+      console.log("R2 score", tempR2);
       setR2(tempR2);
     }
     uploadConfigMod(config, config.projectName);

@@ -13,7 +13,7 @@ import {
 
 import * as tf from "@tensorflow/tfjs";
 import { useProjectName, useConfig } from "../../stores/sensors/sensorsStore";
-import { fetchModel, fetchConfig } from "../../stores/sensors/sensorsActions";
+import { fetchModel, fetchConfig, fetchProcessedConfig } from "../../stores/sensors/sensorsActions";
 
 // const URL = "ws://169.254.109.234:1337";
 const URL = "ws://tvilling.digital:1337";
@@ -131,7 +131,9 @@ class MySocket extends Component {
       const project = this.props.project;
       // model = await tf.loadLayersModel("indexeddb://" + project + "/model");
       const model = await fetchModel();
-      const config = await fetchConfig();
+      const config = await fetchProcessedConfig();
+
+      console.log("CONFIG", config);
 
       this.setState({
         config: config,
@@ -144,7 +146,10 @@ class MySocket extends Component {
       let inputIndexes = [];
       for (let i = 0; i < config.input.length; i++) {
         let index = outputNames.indexOf(config.input[i]);
-        inputIndexes.push(index);
+        inputIndexes.push({
+          index: index,
+          name: config.input[i]
+        });
       }
       let outputIndex = outputNames.indexOf(config.output[0]);
 
@@ -270,9 +275,13 @@ class MySocket extends Component {
       unpacked = unpackIterator.next().value;
       if (this.state.model && unpacked && unpacked.length > 0) {
         let x = []; // input values
+        let x_names = [];
 
         // have to add 3 because CATMAN adds a header for the first 3 values
-        this.state.inputIndexes.forEach(index => x.push(unpacked[index + 3]));
+        this.state.inputIndexes.forEach(function(elem) {
+          x.push(unpacked[elem.index + 3]);
+          x_names.push(elem.name);
+        });
         let output = unpacked[this.state.outputIndex + 3];
         console.log(output);
         // const timestamp = unpacked[LASTONE]
@@ -291,8 +300,26 @@ class MySocket extends Component {
             data: d,
             time: e
           });
+
+          function standardize(x, mean, std) {
+            return (x-mean)/std;
+          }
+
+          function normalize(x, min, max) {
+            return (x-min)/(max-min);
+          }
+
           if (this.state.model) {
-            let predictedVal = this.predictValue(x);
+            let modifiedX = [];
+            for (var i = 0; i < x.length; i++) {
+              let obj = this.state.config.sensors[x_names[i]]
+              if (this.state.config.differentValueRanges) {
+                modifiedX.push(standardize(x[i], obj.mean, obj.std));
+              } else {
+                modifiedX.push(normalize(x[i], obj.min, obj.max));
+              }
+            }
+            let predictedVal = this.predictValue(modifiedX);
             const predictions = this.state.predictions.concat(predictedVal);
             this.setState({
               predictions: predictions
