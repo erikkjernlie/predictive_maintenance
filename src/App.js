@@ -6,19 +6,11 @@ import Sensors from "./Routes/Sensors/Sensors";
 import ProjectSetup from "./Routes/Project/ProjectSetup";
 import Project from "./Routes/Project/Project";
 import { createBrowserHistory } from "history";
-import { fetchModels } from "./stores/models/modelsActions";
 // import { fetchSensors } from "./stores/sensors/sensorsActions";
 
 import "./App.css";
 
 const App = () => {
-  // PROPS IN HERE
-  useEffect(() => {
-    // fetch stuff here
-    fetchModels();
-    // fetchSensors();
-  });
-
   const history = createBrowserHistory({
     basename: ""
   });
