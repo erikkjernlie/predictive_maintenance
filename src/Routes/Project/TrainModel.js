@@ -17,7 +17,8 @@ import {
   getDatasetByColumns,
   getReducedDataset,
   shuffleData,
-  fillConfig
+  fillConfig,
+  shouldStandardize
 } from "./statisticsLib.js";
 import {
   setDataPointsProcessed,
@@ -100,13 +101,16 @@ const TrainModel = ({ match }) => {
     if (configuration.reduceTrainingTime) {
       //features = getReducedDataset(features)
     }
-    /*
-    if (!configuration.differentValueRanges) {
+    
+    console.log(shouldStandardize(features))
+    if (configuration.differentValueRanges || shouldStandardize(features)) {
+      console.log("features were standardized");
       features = standardizeData(features, configuration);
     } else {
+      console.log("features were normalized");
       features = normalizeData(features, configuration);
     }
-    */
+    
     console.log("features, processed", features);
     console.log("targets, processed", targets);
     const [x_train, x_test, y_train, y_test] = getTestTrainSplit(

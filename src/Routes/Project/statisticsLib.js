@@ -11,31 +11,31 @@ import {
   } from 'simple-statistics'
 
 export function getDatasetByColumns(dataset) {
-    const numberOfColumns = dataset[0].length
-    const columnsData = []
+    const numberOfColumns = dataset[0].length;
+    const columnsData = [];
     for (var i = 0; i < numberOfColumns; i++) {
-      const column = dataset.map(x => x[i])
-      columnsData.push(column)
+      const column = dataset.map(x => x[i]);
+      columnsData.push(column);
     }
-    return columnsData
+    return columnsData;
   }
 
 export function getCovarianceMatrix(dataset) {
-    const columnData = getDatasetByColumns(dataset)
-    const numberOfColumns = columnData.length
-    const covariances = []
+    const columnData = getDatasetByColumns(dataset);
+    const numberOfColumns = columnData.length;
+    const covariances = [];
     for (var i = 0; i < numberOfColumns; i++) {
-      const covariances_column_i = []
+      const covariances_column_i = [];
       for (var j = 0; j < numberOfColumns; j++) {
-        covariances_column_i.push(sampleCorrelation(columnData[i], columnData[j]))
+        covariances_column_i.push(sampleCorrelation(columnData[i], columnData[j]));
       }
-      covariances.push(covariances_column_i)
+      covariances.push(covariances_column_i);
     }
-    return covariances
+    return covariances;
   }
 
 export function getReducedDataset(dataset) {
-    const cov = getCovarianceMatrix(dataset)
+    const cov = getCovarianceMatrix(dataset);
     let clone = JSON.parse(JSON.stringify(dataset));
     for (var i = 0; i < dataset[0].length; i++) {
       for (var j = i+1; j < dataset[0].length; j++) {
@@ -44,7 +44,7 @@ export function getReducedDataset(dataset) {
         }
       }
     }
-    return clone
+    return clone;
   }
 
 export function fillConfig(data, config) {
@@ -61,49 +61,71 @@ export function fillConfig(data, config) {
     config.sensors[key]["standardize"] = (x) => ((x - mean_val)/standardDeviation_val);
     config.sensors[key]["normalize"] = (x) => ((x - min_val)/(max_val - min_val));
   });
-  console.log(config);
+}
+
+export function shouldStandardize(data) {
+  const columnData = getDatasetByColumns(data);
+  const numberOfColumns = columnData.length;
+  for (var i = 0; i < numberOfColumns; i++) {
+    for (var j = i; j < numberOfColumns; j++) {
+      if (i !== j) {
+        const mean1 = mean(columnData[i]);
+        const mean2 = mean(columnData[j]);
+        if (mean1/mean2 > 2 || mean1/mean2 < 0.5) {
+          return true;
+        } else {
+          const std1 = standardDeviation(columnData[i]);
+          const std2 = standardDeviation(columnData[j]);
+          if (std1/std2 > 10 || std1/std2 < 0.1) {
+            return true;
+          }
+        }
+      }
+    }
+  }
+  return false;
 }
 
 export function standardizeData(data) {
-    const numberOfColumns = data[0].length
-    const numberOfRows = data.length
-    let meanvals = []
-    let stdvals = []
+    const numberOfColumns = data[0].length;
+    const numberOfRows = data.length;
+    let meanvals = [];
+    let stdvals = [];
     for (var k = 0; k < numberOfColumns; k++) {
-      const col = data.map(x => x[k])
-      meanvals.push(mean(col))
-      stdvals.push(standardDeviation(col))
+      const col = data.map(x => x[k]);
+      meanvals.push(mean(col));
+      stdvals.push(standardDeviation(col));
     }
-    const standardized = []
+    const standardized = [];
     for (var i = 0; i < numberOfRows; i++) {
-      const row = []
+      const row = [];
       for (var j = 0; j < numberOfColumns; j++) {
-        row.push((data[i][j] - meanvals[j])/(stdvals[j]))
+        row.push((data[i][j] - meanvals[j])/(stdvals[j]));
       }
-      standardized.push(row)
+      standardized.push(row);
     }
-    return standardized
+    return standardized;
   }
 
 export function normalizeData(data) {
-    const numberOfColumns = data[0].length
-    const numberOfRows = data.length
-    let maxvals = []
-    let minvals = []
+    const numberOfColumns = data[0].length;
+    const numberOfRows = data.length;
+    let maxvals = [];
+    let minvals = [];
     for (var k = 0; k < numberOfColumns; k++) {
-      const col = data.map(x => x[k])
-      maxvals.push(max(col))
-      minvals.push(min(col))
+      const col = data.map(x => x[k]);
+      maxvals.push(max(col));
+      minvals.push(min(col));
     }
-    const normalized = []
+    const normalized = [];
     for (var i = 0; i < numberOfRows; i++) {
-      const row = []
+      const row = [];
       for (var j = 0; j < numberOfColumns; j++) {
-        row.push((data[i][j] - minvals[j])/(maxvals[j]-minvals[j]))
+        row.push((data[i][j] - minvals[j])/(maxvals[j]-minvals[j]));
       }
-      normalized.push(row)
+      normalized.push(row);
     }
-    return normalized
+    return normalized;
   }
 
 export function getR2Score(predict, data) {
@@ -136,7 +158,7 @@ export function getR2Score(predict, data) {
   }
 
   export function shuffleData(data) {
-    return shuffle(data)
+    return shuffle(data);
   }
 
 export default getR2Score
