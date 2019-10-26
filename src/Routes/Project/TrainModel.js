@@ -214,7 +214,7 @@ const TrainModel = ({ match }) => {
         )}
         {R2 >= modelParams.min_R2_score && R2 < modelParams.decent_R2_score && (
           <div style={{ backgroundColor: "yellow", padding: "5px" }}>
-            Training was unsuccessful, but with limited accuracy. Consider retraining your model by refreshing
+            Training was successful, but with limited accuracy. Consider retraining your model by refreshing
           </div>
         )}
         {lastStep && (
