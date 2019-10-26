@@ -32,6 +32,7 @@ import {
   getBasicModel,
   getComplexModel
 } from "./machineLearningLib.js";
+import DataInfo from "../../Components/Sensor/DataInfo";
 
 // 1. "My dataset has columns with very different value ranges" --> true: standardization, false: normalzation
 // 2. "My dataset is very complex" --> true: flere/bredere lag, false: standard modell
@@ -45,38 +46,49 @@ const modelParams = {
   optimizer: tf.train.adam(0.01),
   loss: "meanSquaredError",
   min_R2_score: 0.5,
-  decent_R2_score: 0.75 // change this to a fair value
+  decent_R2_score: 0.8 // change this to a fair value
 };
 
 const TrainModel = ({ match }) => {
   const configProcessed = useConfigProcessed();
   const dataPointsProcessed = useDataPointsProcessed();
+  const [lastStep, setLastStep] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
+  const [dataInfo, setDataInfo] = useState({});
 
   const [R2, setR2] = useState(-1000);
 
-  let config;
-  let dataPoints;
+  let configLocal;
+  let dataPointsLocal;
 
-  function setConf(val) {
-    config = val;
+  function setConfigLocal(val) {
+    configLocal = val;
   }
 
-  function setDataP(val) {
-    dataPoints = val;
+  function setDataPointsLocal(val) {
+    dataPointsLocal = val;
   }
 
   const { projectName } = match.params;
 
   async function fetchData() {
-    await loadConfig(projectName, setConf);
-    await loadData(projectName, setDataP);
-    console.log("dataP", dataPoints);
-    console.log("conf", config);
+    await loadConfig(projectName, setConfigLocal);
+    await loadData(projectName, setDataPointsLocal);
+    console.log("dataP", dataPointsLocal);
+    console.log("conf", configLocal);
   }
 
   useEffect(async () => {
     await fetchData();
-    train(dataPoints, config);
+    console.log("Done fetching", configLocal)
+    setHasLoaded(true);
+    setDataInfo({
+      input: configLocal.input.concat(configLocal.internal),
+      output: configLocal.output,
+      training: dataPointsLocal.length*(1-modelParams.test_train_split),
+      testing: dataPointsLocal.length*(modelParams.test_train_split)
+    })
+    train(dataPointsLocal, configLocal);
   }, []);
 
   function preprocessData(data) {
@@ -99,16 +111,17 @@ const TrainModel = ({ match }) => {
     console.log("targets", targets);
     console.log("Covariance matrix", getCovarianceMatrix(features));
     if (configuration.reduceTrainingTime) {
-      //features = getReducedDataset(features)
+      features = getReducedDataset(features)
     }
-    
     console.log(shouldStandardize(features))
-    if (configuration.differentValueRanges || shouldStandardize(features)) {
+    if (shouldStandardize(features)) {
       console.log("features were standardized");
       features = standardizeData(features, configuration);
+      configuration.differentValueRanges = true;
     } else {
       console.log("features were normalized");
       features = normalizeData(features, configuration);
+      configuration.differentValueRanges = false;
     }
     
     console.log("features, processed", features);
@@ -140,9 +153,13 @@ const TrainModel = ({ match }) => {
       console.log("R2 score", tempR2);
       setR2(tempR2);
     }
-    uploadConfigMod(config, config.projectName);
-    setDataPointsProcessed(dataPoints);
-    setConfigProcessed(config);
+    await model.save("indexeddb://" + projectName + "/model").then(() => {
+      console.log("Model saved to indexeddb");
+    });
+    uploadConfigMod(configLocal, projectName);
+    setDataPointsProcessed(dataPointsLocal);
+    setConfigProcessed(configLocal);
+    setLastStep(true);
   }
 
   async function trainModel(xTrain, yTrain, xTest, yTest, configuration) {
@@ -164,9 +181,7 @@ const TrainModel = ({ match }) => {
       loss: modelParams.loss
     });
 
-    const trainLogs = [];
     const lossContainer = document.getElementById("lossCanvas");
-    const accContainer = document.getElementById("accuracyCanvas");
     const callbacks = tfvis.show.fitCallbacks(lossContainer, ["loss", "acc"], {
       callbacks: ["onEpochEnd"]
     });
@@ -177,59 +192,36 @@ const TrainModel = ({ match }) => {
       validationData: [xTest, yTest],
       callbacks: callbacks
     });
-
-    await model.save("indexeddb://" + projectName + "/model").then(() => {
-      console.log("Model saved to indexeddb");
-    });
-
-    /*console.log("Loading model");
-    const loadedModel = await tf.loadLayersModel(
-      "indexeddb://" + projectName + "/model"
-    );
-    console.log("Saved model", model);
-    console.log("Loaded model", loadedModel);
-    console.log(
-      "Saved prediction",
-      model.predict(tf.tensor2d([[2.0, 2.0, 2.0]], [1, xTrain.shape[1]])).print()
-    );
-    console.log(
-      "Loaded prediction",
-      loadedModel
-        .predict(tf.tensor2d([[2.0, 2.0, 2.0]], [1, xTrain.shape[1]]))
-        .print()
-    );*/
-
     return model;
   }
 
   return (
     <div className="Sensors">
       <div>
-        <div>Configuration</div>
-        <div>Start training TrainModel</div>
-        {R2 >= modelParams.decent_R2_score && (
-          <div style={{ backgroundColor: "green", padding: "5px" }}>
-            Your training turned out fine.
-          </div>
+        <div className="Configuration">Configuration</div>
+        <div>Training on the following data:</div>
+        {hasLoaded && dataInfo && (
+          <DataInfo info={dataInfo}/>
         )}
-        {R2 >= modelParams.min_R2_score && R2 < modelParams.decent_R2_score && (
-          <div style={{ backgroundColor: "yellow", padding: "5px" }}>
-            Your training is not very good - try to change some settings.
-          </div>
-        )}
-        <Link to={"/" + projectName}>
-          <button>See data and visualization</button>
-        </Link>
-      </div>
-      <div>
         <div>
           <h4>Loss</h4>
           <div className="canvases" id="lossCanvas"></div>
         </div>
-        <div>
-          <h4>Accuracy</h4>
-          <div className="canvases" id="accuracyCanvas"></div>
-        </div>
+        {R2 >= modelParams.decent_R2_score && (
+          <div style={{ backgroundColor: "green", padding: "5px" }}>
+            Training was successful
+          </div>
+        )}
+        {R2 >= modelParams.min_R2_score && R2 < modelParams.decent_R2_score && (
+          <div style={{ backgroundColor: "yellow", padding: "5px" }}>
+            Training was unsuccessful, but with limited accuracy. Consider retraining your model by refreshing
+          </div>
+        )}
+        {lastStep && (
+          <Link to={"/" + projectName}>
+            <button className="buttonStyle">See data and visualization</button>
+          </Link>
+        )}
       </div>
     </div>
   );

@@ -9,7 +9,6 @@ import { useConfig, useDataPoints } from "../../stores/sensors/sensorsStore";
 import {
   setIsComplex,
   setReduceTrainingTime,
-  setDifferentValueRanges,
   setLiveFeedURL,
   setProjectName,
   setDataPoints,
@@ -28,9 +27,6 @@ const ProjectSetup = props => {
   const [selectedDataset, setSelectedDataset] = useState(false);
   const [startingTraining, setStartingTraining] = useState(false);
 
-  const [localDifferentValueRanges, setLocalDifferentValueRanges] = useState(
-    false
-  );
   const [localIsComplex, setLocalIsComplex] = useState(false);
   const [localReduceTrainingTime, setLocalReduceTrainingTime] = useState(false);
 
@@ -96,10 +92,6 @@ const ProjectSetup = props => {
         setIsComplex(!localIsComplex);
         setLocalIsComplex(!localIsComplex);
         break;
-      case "differentValueRanges":
-        setDifferentValueRanges(!localDifferentValueRanges);
-        setLocalDifferentValueRanges(!localDifferentValueRanges);
-        break;
       default:
         break;
     }
@@ -155,16 +147,6 @@ const ProjectSetup = props => {
           <div>
             <div className="Setup__Option">Step 4: Describe your dataset</div>
             <div className="Setup__ProjectName">
-              <div>
-                Do the columns in the dataset have very different value ranges?
-              </div>
-              <Checkbox
-                color="default"
-                checked={localDifferentValueRanges}
-                onClick={() => changeDatasetFact("differentValueRanges")}
-              />
-            </div>
-            <div className="Setup__ProjectName">
               <div>Is the very dataset very complex?</div>
               <Checkbox
                 color="default"
@@ -187,19 +169,23 @@ const ProjectSetup = props => {
               <div>
                 On your predicted value, how much difference do you allow before
                 you consider it a failure?
+                <div className="sensorInput">
+                  Percentage:{" "}
+                  <input
+                    type="number"
+                    onChange={e => setPredictedValuePercentageError(e.target.value)}
+                  />
+                </div>
+                <div className="sensorInput">
+                  Absolute:{" "}
+                  <input
+                    type="number"
+                    onChange={e => setPredictedValueAbsoluteError(e.target.value)}
+                  />
+                </div>
               </div>
-              Percentage:{" "}
-              <input
-                type="number"
-                onChange={e => setPredictedValuePercentageError(e.target.value)}
-              />
-              Absolute:{" "}
-              <input
-                type="number"
-                onChange={e => setPredictedValueAbsoluteError(e.target.value)}
-              />
             </div>
-            <button onClick={startTraining}>Start training your model</button>
+            <button className="buttonStyle" onClick={startTraining}>Start training your model</button>
             {startingTraining && <div>Loading...</div>}
           </div>
         )}

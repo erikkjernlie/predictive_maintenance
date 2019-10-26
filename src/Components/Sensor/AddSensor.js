@@ -18,7 +18,6 @@ const AddSensor = props => {
   const [max, setMax] = useState(null);
 
   const config = useConfig();
-  console.log(config);
 
   const handleUnit = e => {
     if (e.target.value) {

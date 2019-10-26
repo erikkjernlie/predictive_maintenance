@@ -1,5 +1,13 @@
 .Sensors {
   display: flex;
+  width: 100%;
+  max-width: 650px;
+  flex-direction: column;
+  margin: 40px 60px;
+}
+
+.Configuration {
+  font-size: 24px;
 }
 
 .SensorsList {
@@ -79,4 +87,22 @@ td {
 
 .canvases {
   min-width: 500px;
+}
+
+.buttonStyle {
+  margin-top: 18px;
+  background-color: #2963f6; /* Green */
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+}
+
+button:hover {
+  background-color: lightgray;
+  color: black;
+  cursor: pointer;
 }
