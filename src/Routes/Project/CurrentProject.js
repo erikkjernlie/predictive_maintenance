@@ -150,9 +150,11 @@ const CurrentProject = ({ match }) => {
         Project: {lastLoadedProjectName}
       </div>
       {loading && <div>Loading data...</div>}
-      {projectName === undefined && lastLoadedProjectName.length === 0 && (
-        <div>You currently have no current project selected. </div>
-      )}
+      {projectName === undefined &&
+        lastLoadedProjectName &&
+        lastLoadedProjectName.length === 0 && (
+          <div>You currently have no current project selected. </div>
+        )}
       {!loading && (
         <div>
           <MySocket conf={conf} predict={() => predict()} model={model} />
