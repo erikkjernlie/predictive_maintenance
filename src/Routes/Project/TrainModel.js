@@ -139,7 +139,7 @@ const TrainModel = ({ match }) => {
       configuration.differentValueRanges = true;
     } else {
       console.log("features were normalized");
-      //features = normalizeData(features, configuration);
+      features = normalizeData(features, configuration);
       configuration.differentValueRanges = false;
     }
 

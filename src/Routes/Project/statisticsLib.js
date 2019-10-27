@@ -75,12 +75,12 @@ export function shouldStandardize(data) {
         const mean1 = mean(columnData[i]);
         const mean2 = mean(columnData[j]);
         if (mean1 / mean2 > 2 || mean1 / mean2 < 0.5) {
-          return false;
+          return true;
         } else {
           const std1 = standardDeviation(columnData[i]);
           const std2 = standardDeviation(columnData[j]);
           if (std1 / std2 > 10 || std1 / std2 < 0.1) {
-            return false;
+            return true;
           }
         }
       }

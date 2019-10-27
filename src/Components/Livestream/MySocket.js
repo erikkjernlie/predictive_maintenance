@@ -318,8 +318,8 @@ class MySocket extends Component {
             if (this.state.config.differentValueRanges) {
               modifiedX.push(standardize(x[i], obj.mean, obj.std));
             } else {
-              modifiedX.push(x[i]);
-              //modifiedX.push(normalize(x[i], obj.min, obj.max));
+              // modifiedX.push(x[i]);
+              modifiedX.push(normalize(x[i], obj.min, obj.max));
             }
           }
           console.log("modifiedX", modifiedX);
