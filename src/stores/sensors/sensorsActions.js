@@ -60,22 +60,23 @@ export function setData(value) {
 
 export function addSensor(sensor, type, unit, min, max) {
   let config = sensorsStore.getState().config;
-  config["sensors"].forEach(function(x, index) {
-    if (x.name === sensor) {
-      config["sensors"].splice(index, 1);
+  delete config.sensors.sensor;
+  let obj = {
+    [sensor]: {
+      name: sensor,
+      type: type,
+      unit: unit,
+      min: min,
+      max: max
     }
-  });
-  config["sensors"] = config["sensors"].concat({
-    name: sensor,
-    type: type,
-    unit: unit,
-    min: min,
-    max: max
-  });
-  resetSensors();
-  config["sensors"].forEach(sensor => {
-    config[sensor.type] = config[sensor.type].concat(sensor.name);
-  });
+  };
+  config["sensors"] = { ...config["sensors"], ...obj };
+  config["input"] = [];
+  config["output"] = [];
+  config["internal"] = [];
+  Object.keys(config.sensors).forEach(x =>
+    config[config.sensors[x].type].push(config.sensors[x].name)
+  );
   sensorsStore.setState({
     config: config
   });
@@ -93,7 +94,7 @@ export async function fetchModel() {
   let projectName = sensorsStore.getState().config.projectName;
   try {
     const model = await tf.loadLayersModel(
-      "indexeddb://" + "legenden" + "/model"
+      "indexeddb://" + "2710_1" + "/model"
     );
     return model;
   } catch (err) {
@@ -103,16 +104,12 @@ export async function fetchModel() {
   }
 }
 
-export async function fetchConfig() {
-  let config = sensorsStore.getState().config;
-  if (config.projectName.length === 0) {
-    const downloadRefConfig = storage.ref(`${"legenden"}/config.json`);
-    return downloadRefConfig.getDownloadURL().then(async url => {
-      return fetch(url).then(response => response.json());
-    });
-  } else {
-    return config;
-  }
+export async function fetchProcessedConfig(projectName) {
+  console.log("projectName", projectName);
+  const downloadRefConfig = storage.ref(`${projectName}/config_mod.json`);
+  return downloadRefConfig.getDownloadURL().then(async url => {
+    return fetch(url).then(response => response.json());
+  });
 }
 
 export function setProjectName(value) {

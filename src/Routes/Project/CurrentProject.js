@@ -59,18 +59,15 @@ function setSensorData(d) {
 }
 
 const CurrentProject = ({ match }) => {
-  console.log("hey");
   const { projectName } = match.params;
   const [currentSensor, setCurrentSensor] = useState("");
   const conf = useConfig();
-  console.log("CONFIG", conf);
 
   const [loading, setLoading] = useState(false);
 
   const lastLoadedProjectName = projectName;
 
   const model = fetchModel();
-  console.log("m", model);
 
   let plot_y = [];
   let plot_pred = [];
@@ -150,12 +147,19 @@ const CurrentProject = ({ match }) => {
         Project: {lastLoadedProjectName}
       </div>
       {loading && <div>Loading data...</div>}
-      {projectName === undefined && lastLoadedProjectName.length === 0 && (
-        <div>You currently have no current project selected. </div>
-      )}
+      {projectName === undefined &&
+        lastLoadedProjectName &&
+        lastLoadedProjectName.length === 0 && (
+          <div>You currently have no current project selected. </div>
+        )}
       {!loading && (
         <div>
-          <MySocket conf={conf} predict={() => predict()} model={model} />
+          <MySocket
+            projectName={match.params.projectName}
+            conf={conf}
+            predict={() => predict()}
+            model={model}
+          />
         </div>
       )}
       {!loading && (

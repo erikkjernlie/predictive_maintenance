@@ -13,7 +13,11 @@ import {
 
 import * as tf from "@tensorflow/tfjs";
 import { useProjectName, useConfig } from "../../stores/sensors/sensorsStore";
-import { fetchModel, fetchConfig } from "../../stores/sensors/sensorsActions";
+import {
+  fetchModel,
+  fetchConfig,
+  fetchProcessedConfig
+} from "../../stores/sensors/sensorsActions";
 
 // const URL = "ws://169.254.109.234:1337";
 const URL = "ws://tvilling.digital:1337";
@@ -75,6 +79,7 @@ class MySocket extends Component {
     if (this.state.model) {
       // model is a promise
       // console.log(this.props.model); MODLE IS A PROMISE
+      console.log(dataPoint);
       const prediction = this.state.model
         .predict(tf.tensor2d([dataPoint], [1, dataPoint.length]))
         .dataSync();
@@ -131,7 +136,18 @@ class MySocket extends Component {
       const project = this.props.project;
       // model = await tf.loadLayersModel("indexeddb://" + project + "/model");
       const model = await fetchModel();
-      const config = await fetchConfig();
+      const config = await fetchProcessedConfig(this.props.projectName);
+      /*
+
+      function setConfig(val) {
+        config = val;
+      }
+
+      await loadConfigMod(projectName, setConfig)
+
+      */
+
+      console.log("CONFIG", config);
 
       this.setState({
         config: config,
@@ -144,7 +160,10 @@ class MySocket extends Component {
       let inputIndexes = [];
       for (let i = 0; i < config.input.length; i++) {
         let index = outputNames.indexOf(config.input[i]);
-        inputIndexes.push(index);
+        inputIndexes.push({
+          index: index,
+          name: config.input[i]
+        });
       }
       let outputIndex = outputNames.indexOf(config.output[0]);
 
@@ -209,7 +228,6 @@ class MySocket extends Component {
         if (evt.data.byteLength > 0) {
           const data = evt.data;
           let decoder = new TextDecoder("utf-8");
-          console.log(data);
 
           const sourceID = decoder.decode(new Uint8Array(data, 0, 4));
           this.parseData(data.slice(4), sourceID);
@@ -217,8 +235,8 @@ class MySocket extends Component {
           console.log("pong"); // why pong?
         }
       }
-      // counter += 1;
-      // counter = counter % 0;
+      counter += 1;
+      counter = counter % 5;
     };
 
     this.ws.onclose = () => {
@@ -258,7 +276,6 @@ class MySocket extends Component {
     while (unpacked) {
       // NEED TO SYNCRONIZE TO GET CORRECT DATE
       // FIX THIS STUFF BELOW
-      console.log("datapoibt");
       sourceBuffer.x_buffer.push(new Date(unpacked[0] * 1000));
       const channelsIds = this.state.subscribedSources[sourceID].channels.map(
         it => it.id
@@ -267,61 +284,65 @@ class MySocket extends Component {
         sourceBuffer.y_buffer[channelID].push(unpacked[channelID + 1]);
       });
 
-      unpacked = unpackIterator.next().value;
+      unpacked = unpackIterator.next().value; // Do we skip a value here?
       if (this.state.model && unpacked && unpacked.length > 0) {
         let x = []; // input values
+        let x_names = [];
 
         // have to add 3 because CATMAN adds a header for the first 3 values
-        this.state.inputIndexes.forEach(index => x.push(unpacked[index + 3]));
+        this.state.inputIndexes.forEach(function(elem) {
+          x.push(unpacked[elem.index + 3]);
+          x_names.push(elem.name);
+        });
         let output = unpacked[this.state.outputIndex + 3];
-        console.log(output);
-        // const timestamp = unpacked[LASTONE]
-        // const otherSelectedSources må også være med
-        // data has 3 values, then the names start
-        // const time = this.state.time.concat(new Date(unpacked[11 + 3] * 1000));
-        if (this.state.data.length >= 400) {
-          let d = this.state.data;
-          let e = this.state.time;
-          d.shift();
-          d.concat(output);
-          e.shift();
-          e.concat(new Date(unpacked[14] * 1000));
 
-          this.setState({
-            data: d,
-            time: e
-          });
-          if (this.state.model && x.length === this.state.inputIndexes.length) {
-            let p = this.state.predictions;
-            let predictedVal = this.predictValue(x);
-            p.shift();
-            p.concat(predictedVal);
-            this.setState({
-              predictions: p
-            });
-          } else {
-            console.log("no model");
+        let predictions = this.state.predictions;
+
+        let data = this.state.data.concat(output);
+        let time = this.state.time.concat(
+          new Date(unpacked[unpacked.length - 1] * 1000)
+        );
+
+        if (this.state.model && x.length === this.state.inputIndexes.length) {
+          function standardize(x, mean, std) {
+            return (x - mean) / std;
           }
+
+          function normalize(x, min, max) {
+            return (x - min) / (max - min);
+          }
+          let modifiedX = [];
+          for (var i = 0; i < x.length; i++) {
+            let obj = this.state.config.sensors[x_names[i]];
+            console.log(this.state.config);
+            if (this.state.config.differentValueRanges) {
+              modifiedX.push(standardize(x[i], obj.mean, obj.std));
+            } else {
+              modifiedX.push(x[i]);
+              //modifiedX.push(normalize(x[i], obj.min, obj.max));
+            }
+          }
+          console.log("modifiedX", modifiedX);
+          console.log("x", x);
+          let predictedVal = this.predictValue(modifiedX);
+          console.log(this.predictValue([22, 3.1]));
+          console.log(this.predictValue([3.1, 22]));
+
+          predictions.push(predictedVal);
         } else {
-          const data = this.state.data.concat(output);
-          const time = this.state.time.concat(new Date(unpacked[14] * 1000));
-          if (this.state.model) {
-            let predictedVal = this.predictValue(x);
-            const predictions = this.state.predictions.concat(predictedVal);
-            this.setState({
-              predictions
-            });
-          } else {
-            console.log("no model");
-          }
-          // const horizontal_line = this.state.horizontal_line.concat(200);
-          this.setState({
-            data: data,
-            time: time
-          });
+          console.log("no model");
         }
-        // console.log("ARRAY", array2);
-        // console  .log(data);
+
+        if (this.state.data.length === 400) {
+          predictions.shift();
+          data.shift();
+          time.shift();
+        }
+        this.setState({
+          predictions: predictions,
+          data: data,
+          time: time
+        });
       }
       break;
     }
