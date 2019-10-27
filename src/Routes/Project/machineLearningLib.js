@@ -87,7 +87,7 @@ export function getComplexModel(inputSize, outputSize, modelParams) {
   return model;
 }
 
-export function getModelWithRegularization(inputSize, outputSize, modelParams) {
+export function getBasicModelWithRegularization(inputSize, outputSize, modelParams) {
   const model = tf.sequential();
   model.add(
     tf.layers.dense({

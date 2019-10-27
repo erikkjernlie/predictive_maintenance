@@ -66,7 +66,7 @@ export function fillConfig(data, config) {
   });
 }
 
-export function shouldStandardize(data) {
+export function shouldStandardize(data, max_mean_diff, max_std_diff) {
   const columnData = getDatasetByColumns(data);
   const numberOfColumns = columnData.length;
   for (var i = 0; i < numberOfColumns; i++) {
@@ -74,12 +74,12 @@ export function shouldStandardize(data) {
       if (i !== j) {
         const mean1 = mean(columnData[i]);
         const mean2 = mean(columnData[j]);
-        if (mean1 / mean2 > 2 || mean1 / mean2 < 0.5) {
+        if (mean1 / mean2 > max_mean_diff || mean1 / mean2 < (1/max_mean_diff)) {
           return true;
         } else {
           const std1 = standardDeviation(columnData[i]);
           const std2 = standardDeviation(columnData[j]);
-          if (std1 / std2 > 10 || std1 / std2 < 0.1) {
+          if (std1 / std2 > max_mean_diff || std1 / std2 < (1/max_mean_diff)) {
             return true;
           }
         }
