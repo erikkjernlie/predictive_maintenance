@@ -242,8 +242,8 @@ class MySocket extends Component {
           console.log("pong"); // why pong?
         }
       }
-      counter += 1;
-      counter = counter % 5;
+      // counter += 1;
+      // counter = counter % 5;
     };
 
     this.ws.onclose = () => {
@@ -430,16 +430,23 @@ class MySocket extends Component {
             {
               y: this.state.data,
               x: this.state.time,
-              name: "Real value"
+              name: "Real value",
+              type: "scattergl"
             },
             {
               y: this.state.predictions,
+              type: "scattergl",
               name: "Predicted",
               x: this.state.time,
               marker: { color: "red" }
             }
           ]}
         />
+
+        <h4>Plot of operational status</h4>
+        {this.state.config && this.state.config.output && (
+          <h5>Showing data for: {this.state.config.output[0]}</h5>
+        )}
         {this.state.timeSinceLastError && (
           <div>
             The last error happened at{" "}
@@ -447,10 +454,6 @@ class MySocket extends Component {
               "MMMM Do YYYY, h:mm:ss a"
             )}
           </div>
-        )}
-        <h4>Plot of operational status</h4>
-        {this.state.config && this.state.config.output && (
-          <h5>Showing data for: {this.state.config.output[0]}</h5>
         )}
         <Plot
           data={[
