@@ -25,7 +25,7 @@ export function getFeatureTargetSplit(dataset, config) {
     inputs.forEach(function(inputName) {
       row.push(Number(dataRow[inputName]));
     });
-    transferedData.push(row);
+    features.push(row);
   });
   return [features, targets];
 }
@@ -98,12 +98,20 @@ export function getModelWithRegularization(inputSize, outputSize, modelParams) {
     })
   );
   model.add(
-    tf.layers.dense({ kernelRegularizer: tf.regularizers.L1L2, units: outputSize, activation: modelParams.activation })
+    tf.layers.dense({
+      kernelRegularizer: tf.regularizers.L1L2,
+      units: outputSize,
+      activation: modelParams.activation
+    })
   );
   return model;
 }
 
-export function getComplexModelWithRegularization(inputSize, outputSize, modelParams) {
+export function getComplexModelWithRegularization(
+  inputSize,
+  outputSize,
+  modelParams
+) {
   const model = tf.sequential();
   model.add(
     tf.layers.dense({
@@ -121,7 +129,11 @@ export function getComplexModelWithRegularization(inputSize, outputSize, modelPa
     })
   );
   model.add(
-    tf.layers.dense({ kernelRegularizer: tf.regularizers.L1L2, units: outputSize, activation: modelParams.activation })
+    tf.layers.dense({
+      kernelRegularizer: tf.regularizers.L1L2,
+      units: outputSize,
+      activation: modelParams.activation
+    })
   );
   return model;
 }
