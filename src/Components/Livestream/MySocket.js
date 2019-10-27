@@ -72,7 +72,7 @@ class MySocket extends Component {
     }
   };
 
-  predictValue(dataPoint) {
+  predictValue(model, dataPoint) {
     /* NEED TO BE FIXED
     if (true) {
       dataPoint = standardizeData([dataPoint]);
@@ -81,17 +81,13 @@ class MySocket extends Component {
     }
     */
 
-    if (this.state.model) {
-      // model is a promise
-      // console.log(this.props.model); MODLE IS A PROMISE
-      const prediction = this.state.model
-        .predict(tf.tensor2d([dataPoint], [1, dataPoint.length]))
-        .dataSync();
-      if (prediction.length === 1) {
-        return prediction[0];
-      } else {
-        return prediction;
-      }
+    const prediction = model
+      .predict(tf.tensor2d([dataPoint], [1, dataPoint.length]))
+      .dataSync();
+    if (prediction.length === 1) {
+      return prediction[0];
+    } else {
+      return prediction;
     }
   }
 
@@ -292,7 +288,12 @@ class MySocket extends Component {
       });
 
       unpacked = unpackIterator.next().value; // Do we skip a value here?
-      if (this.state.model && unpacked && unpacked.length > 0) {
+      if (
+        this.state.model &&
+        this.state.config &&
+        unpacked &&
+        unpacked.length > 0
+      ) {
         let x = []; // input values
         let x_names = [];
 
@@ -331,21 +332,57 @@ class MySocket extends Component {
               modifiedX.push(normalize(x[i], obj.min, obj.max));
             }
           }
-          let predictedVal = this.predictValue(modifiedX);
-
-          predictions.push(predictedVal);
-
-          // HANDLE IF BELOW MIN OR OVER MAX
-          if (this.state.configFromProjectSetup.predictedValueAbsoluteError) {
-            let predictedValueAbsoluteError = this.state.configFromProjectSetup
-              .predictedValueAbsoluteError;
-            if (Math.abs(predictedVal - output) > predictedValueAbsoluteError) {
-              numberOfErrorDatapoints = numberOfErrorDatapoints += 1;
-              console.log("TOO BIG DIFFERENCE");
-              this.setState({
-                timeSinceLastError: new Date()
-              });
+          let errorPoint = false;
+          let errorMessage = "";
+          // point is predicted wrongly
+          if (
+            this.state.config &&
+            this.state.config.input &&
+            modifiedX.length === this.state.config.input.length
+          ) {
+            let predictedVal = this.predictValue(this.state.model, modifiedX);
+            predictions.push(predictedVal);
+            if (this.state.configFromProjectSetup.predictedValueAbsoluteError) {
+              let predictedValueAbsoluteError = this.state
+                .configFromProjectSetup.predictedValueAbsoluteError;
+              if (
+                Math.abs(predictedVal - output) > predictedValueAbsoluteError
+              ) {
+                errorPoint = true;
+                errorMessage =
+                  "The predicted value differed from the real value too much.";
+              }
             }
+          }
+          // point is below minimum
+          if (
+            this.state.config.output &&
+            this.state.configFromProjectSetup.sensors[
+              this.state.config.output[0]
+            ].min > output
+          ) {
+            errorPoint = true;
+            errorMessage =
+              "The real value was below the chosen min-value for the sensor.";
+          }
+          // point is above maxomum
+          if (
+            this.state.config.output &&
+            this.state.configFromProjectSetup.sensors[
+              this.state.config.output[0]
+            ].max < output
+          ) {
+            errorMessage =
+              "The real value was over the chosen max-value for the sensor.";
+            errorPoint = true;
+          }
+          if (errorPoint) {
+            numberOfErrorDatapoints = numberOfErrorDatapoints += 1;
+
+            this.setState({
+              timeSinceLastError: new Date(),
+              errorMessage: errorMessage
+            });
           }
         } else {
           console.log("no model");
@@ -363,13 +400,15 @@ class MySocket extends Component {
           data.shift();
           time.shift();
         }
-        this.setState({
-          predictions: predictions,
-          data: data,
-          time: time,
-          numberOfDatapoints: numberOfDatapoints,
-          numberOfErrorDatapoints: numberOfErrorDatapoints
-        });
+        if (predictions.length === data.length) {
+          this.setState({
+            predictions: predictions,
+            data: data,
+            time: time,
+            numberOfDatapoints: numberOfDatapoints,
+            numberOfErrorDatapoints: numberOfErrorDatapoints
+          });
+        }
         // if (Math.abs(predictedVal - this.state.configFromProjectSetup[])
       }
       break;
@@ -452,7 +491,8 @@ class MySocket extends Component {
             The last error happened at{" "}
             {moment(this.state.timeSinceLastError.toString()).format(
               "MMMM Do YYYY, h:mm:ss a"
-            )}
+            )}{" "}
+            and had the following error message: {this.state.errorMessage}.
           </div>
         )}
         <Plot
