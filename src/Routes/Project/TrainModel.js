@@ -174,21 +174,7 @@ const TrainModel = ({ match }) => {
       console.log("R2 score", tempR2);
       setR2(tempR2);
     }
-    let dataPoint1 = [22, 3];
-    let dataPoint2 = [3, 22];
-
-    console.log(
-      "PREDICT FOR FAEN 1",
-      model
-        .predict(tf.tensor2d([dataPoint1], [1, dataPoint1.length]))
-        .dataSync()
-    );
-    console.log(
-      "PREDICT FOR FAEN 2",
-      model
-        .predict(tf.tensor2d([dataPoint2], [1, dataPoint2.length]))
-        .dataSync()
-    );
+    
     await model.save("indexeddb://" + projectName + "/model").then(() => {
       console.log("Model saved to indexeddb");
     });
