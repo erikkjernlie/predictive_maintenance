@@ -135,7 +135,7 @@ class MySocket extends Component {
     (async () => {
       const project = this.props.project;
       // model = await tf.loadLayersModel("indexeddb://" + project + "/model");
-      const model = await fetchModel();
+      const model = await fetchModel(this.props.projectName);
       const config = await fetchProcessedConfig(this.props.projectName);
       /*
 
@@ -147,7 +147,7 @@ class MySocket extends Component {
 
       */
 
-      console.log("CONFIG", config);
+      console.log("model", model);
 
       this.setState({
         config: config,

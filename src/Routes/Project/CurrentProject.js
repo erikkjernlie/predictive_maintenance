@@ -67,7 +67,7 @@ const CurrentProject = ({ match }) => {
 
   const lastLoadedProjectName = projectName;
 
-  const model = fetchModel();
+  const model = fetchModel(projectName);
 
   let plot_y = [];
   let plot_pred = [];

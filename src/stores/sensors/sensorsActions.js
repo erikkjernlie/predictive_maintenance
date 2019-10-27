@@ -90,11 +90,10 @@ export function setMaxValue(sensor, maxValue) {
   console.log(maxValue); // figure out where to store this
 }
 
-export async function fetchModel() {
-  let projectName = sensorsStore.getState().config.projectName;
+export async function fetchModel(projectName) {
   try {
     const model = await tf.loadLayersModel(
-      "indexeddb://" + "2710_1" + "/model"
+      "indexeddb://" + projectName + "/model"
     );
     return model;
   } catch (err) {
