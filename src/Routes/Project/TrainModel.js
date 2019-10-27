@@ -30,7 +30,7 @@ import {
 import { 
   loadConfig,
   loadData,
-  uploadConfigMod
+  uploadProcessedConfig
 } from "./transferLib.js";
 
 import {
@@ -168,7 +168,7 @@ const TrainModel = ({ match }) => {
     await model.save("indexeddb://" + projectName + "/model").then(() => {
       console.log("Model saved to indexeddb");
     });
-    uploadConfigMod(configLocal, projectName);
+    uploadProcessedConfig(configLocal, projectName);
     setDataPointsProcessed(dataPointsLocal);
     setConfigProcessed(configLocal);
     setLastStep(true);

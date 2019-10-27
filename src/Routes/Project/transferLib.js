@@ -45,7 +45,7 @@ export function uploadConfig(config, project, progressMethod) {
   );
 }
 
-export function uploadConfigMod(config, project) {
+export function uploadProcessedConfig(config, project) {
   const configblob = new Blob([JSON.stringify(config)], {
     type: "application/json"
   });
@@ -78,7 +78,7 @@ export async function loadConfig(project, func) {
   });
 }
 
-export async function loadConfigMod(project, func) {
+export async function loadProcessedConfig(project, func) {
   const downloadRefConfig = storage.ref(`${project}/config_mod.json`);
   await downloadRefConfig.getDownloadURL().then(async url => {
     await fetch(url)
@@ -103,6 +103,35 @@ export async function loadData(project, func) {
 export async function getTensorflowModel(project, setModel) {
   let model = await tf.loadLayersModel("indexeddb://" + project + "/model");
   setModel(model);
+}
+
+export async function fetchProcessedConfig(projectName) {
+  console.log("projectName", projectName);
+  const downloadRefConfig = storage.ref(`${projectName}/config_mod.json`);
+  return downloadRefConfig.getDownloadURL().then(async url => {
+    return fetch(url).then(response => response.json());
+  });
+}
+
+export async function fetchConfig(projectName) {
+  console.log("projectName", projectName);
+  const downloadRefConfig = storage.ref(`${projectName}/config.json`);
+  return downloadRefConfig.getDownloadURL().then(async url => {
+    return fetch(url).then(response => response.json());
+  });
+}
+
+export async function fetchModel(projectName) {
+  try {
+    const model = await tf.loadLayersModel(
+      "indexeddb://" + projectName + "/model"
+    );
+    return model;
+  } catch (err) {
+    console.error(err);
+  } finally {
+    console.log("hmm");
+  }
 }
 
 export default uploadConfig;

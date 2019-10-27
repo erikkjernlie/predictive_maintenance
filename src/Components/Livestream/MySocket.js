@@ -17,7 +17,7 @@ import {
   fetchModel,
   fetchConfig,
   fetchProcessedConfig
-} from "../../stores/sensors/sensorsActions";
+} from "./transferLib.js";
 import Plot from "react-plotly.js";
 import moment from "moment";
 
@@ -145,7 +145,7 @@ class MySocket extends Component {
         config = val;
       }
 
-      await loadConfigMod(projectName, setConfig)
+      await loadProcessedConfig(projectName, setConfig)
 
       */
 
