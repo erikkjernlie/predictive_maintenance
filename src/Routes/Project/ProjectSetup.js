@@ -133,7 +133,7 @@ const ProjectSetup = props => {
                   <th className="TableField">Sensor </th>
                   <th className="TableField">Input</th>
                   <th className="TableField">output</th>
-                  <th className="TableField">internal sensor</th>
+                  <th className="TableField">Other</th>
                   <th className="TableField">Unit</th>
                   <th className="TableField">Min-value</th>
                   <th className="TableField">Max-value</th>
@@ -151,7 +151,10 @@ const ProjectSetup = props => {
           <div>
             <div className="Setup__Option">Step 4: Describe your dataset</div>
             <div className="Setup__ProjectName">
-              <div>Is the very dataset very complex?</div>
+              <div>
+                Do you consider the data to be very complex?
+                Any function that can be approximated with a (non-high-degree) polynomial is generally not considered complex.
+                </div>
               <Checkbox
                 color="default"
                 checked={localIsComplex}
@@ -160,8 +163,8 @@ const ProjectSetup = props => {
             </div>
             <div className="Setup__ProjectName">
               <div>
-                Do you want to reduce the training time by discarding covariant
-                features?
+                Do you want to possibly reduce the training time by discarding covariant features? 
+                Training machine learning models require many calculations, which can be sped up by considering a reduced number of features.
               </div>
               <Checkbox
                 color="default"
@@ -171,8 +174,8 @@ const ProjectSetup = props => {
             </div>
             <div className="Setup__ProjectName">
               <div>
-                On your predicted value, how much difference do you allow before
-                you consider it a failure?
+                On your predicted value, how much prediction error do you allow before
+                you suspect a failure?
                 <div className="sensorInput">
                   Percentage:{" "}
                   <input

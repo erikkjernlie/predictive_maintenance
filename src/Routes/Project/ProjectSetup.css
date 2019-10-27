@@ -30,7 +30,12 @@ th {
   color: black;
 }
 
+.inputClass {
+  max-width: 25px;
+}
+
 .Setup__ProjectName {
+  margin-top: 10px;
   font-size: 14px;
   color: grey;
   display: flex;
