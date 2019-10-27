@@ -98,12 +98,20 @@ export function getBasicModelWithRegularization(inputSize, outputSize, modelPara
     })
   );
   model.add(
-    tf.layers.dense({ kernelRegularizer: tf.regularizers.L1L2, units: outputSize, activation: modelParams.activation })
+    tf.layers.dense({
+      kernelRegularizer: tf.regularizers.L1L2,
+      units: outputSize,
+      activation: modelParams.activation
+    })
   );
   return model;
 }
 
-export function getComplexModelWithRegularization(inputSize, outputSize, modelParams) {
+export function getComplexModelWithRegularization(
+  inputSize,
+  outputSize,
+  modelParams
+) {
   const model = tf.sequential();
   model.add(
     tf.layers.dense({
@@ -121,7 +129,11 @@ export function getComplexModelWithRegularization(inputSize, outputSize, modelPa
     })
   );
   model.add(
-    tf.layers.dense({ kernelRegularizer: tf.regularizers.L1L2, units: outputSize, activation: modelParams.activation })
+    tf.layers.dense({
+      kernelRegularizer: tf.regularizers.L1L2,
+      units: outputSize,
+      activation: modelParams.activation
+    })
   );
   return model;
 }
