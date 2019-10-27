@@ -32,7 +32,7 @@ const ProjectSetup = props => {
 
   const [lastStep, setLastStep] = useState(false);
   const [step2, setStep2] = useState(false);
-
+ 
   const config = useConfig();
   const dataPoints = useDataPoints();
 
@@ -50,8 +50,12 @@ const ProjectSetup = props => {
   };
 
   const startTraining = () => {
-    setStartingTraining(true);
-    handleUpload();
+    if (config.output.length === 1) {
+      setStartingTraining(true);
+      handleUpload();
+    } else {
+      alert("Can only train with one output");
+    }
   };
 
   const selectDataset = data => {

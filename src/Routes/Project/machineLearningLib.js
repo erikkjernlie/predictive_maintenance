@@ -55,6 +55,7 @@ export function getComplexModel(inputSize, outputSize, modelParams) {
   const model = tf.sequential();
   model.add(
     tf.layers.dense({
+      kernelRegularizer: tf.regularizers.L1L2,
       units: 10,
       activation: modelParams.activation,
       inputShape: [inputSize]
@@ -62,12 +63,13 @@ export function getComplexModel(inputSize, outputSize, modelParams) {
   );
   model.add(
     tf.layers.dense({
+      kernelRegularizer: tf.regularizers.L1L2,
       units: 5,
       activation: modelParams.activation
     })
   );
   model.add(
-    tf.layers.dense({ units: outputSize, activation: modelParams.activation })
+    tf.layers.dense({ kernelRegularizer: tf.regularizers.L1L2, units: outputSize, activation: modelParams.activation })
   );
   return model;
 }
