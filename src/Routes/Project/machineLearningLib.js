@@ -1,6 +1,7 @@
 import "./TrainModel.css";
 import * as tf from "@tensorflow/tfjs";
 
+/*
 export function getFeatureTargetSplit(data, config) {
   const feats = config.input.concat(config.internal);
   const targs = config.output;
@@ -11,6 +12,21 @@ export function getFeatureTargetSplit(data, config) {
   console.log("FEATURES", features);
   feats.forEach(feat => targets.forEach(x => delete x[feat]));
   targs.forEach(targ => features.forEach(x => delete x[targ]));
+  return [features, targets];
+}
+*/
+
+export function getFeatureTargetSplit(dataset, config) {
+  const inputs = config.input.concat(config.internal);
+  const targets = dataset.map(x => [Number(x[config.output[0]])]);
+  let features = [];
+  dataset.forEach(function(dataRow) {
+    let row = [];
+    inputs.forEach(function(inputName) {
+      row.push(Number(dataRow[inputName]));
+    });
+    transferedData.push(row);
+  });
   return [features, targets];
 }
 
@@ -36,7 +52,6 @@ export function convertToTensors(x_train, x_test, y_train, y_test) {
 }
 
 export function getBasicModel(inputSize, outputSize, modelParams) {
-  console.log("inputsize", inputSize, outputSize);
   const model = tf.sequential();
   model.add(
     tf.layers.dense({
@@ -52,6 +67,43 @@ export function getBasicModel(inputSize, outputSize, modelParams) {
 }
 
 export function getComplexModel(inputSize, outputSize, modelParams) {
+  const model = tf.sequential();
+  model.add(
+    tf.layers.dense({
+      units: 10,
+      activation: modelParams.activation,
+      inputShape: [inputSize]
+    })
+  );
+  model.add(
+    tf.layers.dense({
+      units: 5,
+      activation: modelParams.activation
+    })
+  );
+  model.add(
+    tf.layers.dense({ units: outputSize, activation: modelParams.activation })
+  );
+  return model;
+}
+
+export function getModelWithRegularization(inputSize, outputSize, modelParams) {
+  const model = tf.sequential();
+  model.add(
+    tf.layers.dense({
+      kernelRegularizer: tf.regularizers.L1L2,
+      units: 10,
+      activation: modelParams.activation,
+      inputShape: [inputSize]
+    })
+  );
+  model.add(
+    tf.layers.dense({ kernelRegularizer: tf.regularizers.L1L2, units: outputSize, activation: modelParams.activation })
+  );
+  return model;
+}
+
+export function getComplexModelWithRegularization(inputSize, outputSize, modelParams) {
   const model = tf.sequential();
   model.add(
     tf.layers.dense({
