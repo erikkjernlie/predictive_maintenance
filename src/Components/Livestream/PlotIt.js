@@ -7,7 +7,6 @@ export default class PlotIt extends Component {
       width: 1000,
       height: 340,
       padding: 0,
-      title: "Data from test rigg",
       plot_bgcolor: "#fff"
     },
     config: {},

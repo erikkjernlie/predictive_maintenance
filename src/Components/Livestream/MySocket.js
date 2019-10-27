@@ -19,6 +19,7 @@ import {
   fetchProcessedConfig
 } from "../../stores/sensors/sensorsActions";
 import Plot from "react-plotly.js";
+import moment from "moment";
 
 // const URL = "ws://169.254.109.234:1337";
 const URL = "ws://tvilling.digital:1337";
@@ -420,19 +421,36 @@ class MySocket extends Component {
   render() {
     return (
       <div>
-        <h4>Livestream data:</h4>
+        <h4>Plot of livestream data</h4>
+        {this.state.config && this.state.config.output && (
+          <h5>Showing data for: {this.state.config.output[0]}</h5>
+        )}
         <PlotIt
           dataPoints={[
-            { y: this.state.data, x: this.state.time },
+            {
+              y: this.state.data,
+              x: this.state.time,
+              name: "Real value"
+            },
             {
               y: this.state.predictions,
+              name: "Predicted",
               x: this.state.time,
               marker: { color: "red" }
             }
           ]}
         />
         {this.state.timeSinceLastError && (
-          <div>{this.state.timeSinceLastError.toString()}</div>
+          <div>
+            The last error happened at{" "}
+            {moment(this.state.timeSinceLastError.toString()).format(
+              "MMMM Do YYYY, h:mm:ss a"
+            )}
+          </div>
+        )}
+        <h4>Plot of operational status</h4>
+        {this.state.config && this.state.config.output && (
+          <h5>Showing data for: {this.state.config.output[0]}</h5>
         )}
         <Plot
           data={[

@@ -6,7 +6,6 @@ const Sensor = props => {
     width: 420,
     height: 340,
     padding: 0,
-    title: "Data from test rigg",
     plot_bgcolor: "#fff"
   };
 
