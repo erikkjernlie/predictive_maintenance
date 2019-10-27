@@ -170,7 +170,7 @@ const CurrentProject = ({ match }) => {
       {!loading && (
         <div>
           {
-            <div className={!liveData ? "show" : "hide"}>
+            <div className={liveData ? "show" : "hide"}>
               <MySocket
                 projectName={match.params.projectName}
                 predict={() => predict()}
@@ -179,7 +179,7 @@ const CurrentProject = ({ match }) => {
             </div>
           }
           {
-            <div className={liveData ? "show" : "hide"}>
+            <div className={!liveData ? "show" : "hide"}>
               <div className="Setup__Option">
                 Your sensors (choose one if you have not selected any):
               </div>

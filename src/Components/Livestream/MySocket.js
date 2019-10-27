@@ -48,6 +48,8 @@ class MySocket extends Component {
     inputIndexes: [],
     selectedSources: [],
     horizontal_line: [],
+    inputValuesForPrediction: {},
+    manuallyPredictedOutput: null,
     subscribedSources: {
       "0001": {
         byteFormat: "<HHIdddddddddddd",
@@ -69,6 +71,57 @@ class MySocket extends Component {
           }
         ]
       }
+    }
+  };
+
+  predictManually = () => {
+    console.log(this.state.inputIndexes);
+    this.state.inputIndexes.forEach(input => {
+      if (!this.state.inputValuesForPrediction[input]) {
+        return null;
+      }
+    });
+
+    if (this.state.model) {
+      return this.predictValue(
+        this.state.model,
+        this.state.inputIndexes.map(obj => {
+          console.log(Number(this.state.inputValuesForPrediction[obj.name]));
+          return Number(this.state.inputValuesForPrediction[obj.name]);
+        })
+      );
+    }
+  };
+
+  onChange = sensorName => e => {
+    console.log(sensorName, e.target.value);
+    let obj = this.state.inputValuesForPrediction;
+    if (this.state.config.differentValueRanges) {
+      obj[sensorName] = this.standardize(
+        e.target.value,
+        this.state.config.sensors[sensorName].mean,
+        this.state.config.sensors[sensorName].std
+      );
+    } else {
+      obj[sensorName] = this.normalize(
+        e.target.value,
+        this.state.config.sensors[sensorName].min,
+        this.state.config.sensors[sensorName].max
+      );
+    }
+    this.setState({
+      inputValuesForPrediction: obj
+    });
+
+    let prediction = this.predictManually();
+    if (prediction !== null) {
+      this.setState({
+        manuallyPredictedOutput: prediction
+      });
+    } else {
+      this.setState({
+        manuallyPredictedOutput: "Error"
+      });
     }
   };
 
@@ -259,6 +312,14 @@ class MySocket extends Component {
       .concat(matrixChannels);
   };
 
+  standardize = (x, mean, std) => {
+    return (x - mean) / std;
+  };
+
+  normalize = (x, min, max) => {
+    return (x - min) / (max - min);
+  };
+
   parseData = (data, sourceID) => {
     let counter = 0;
     // console.log(data);
@@ -316,20 +377,13 @@ class MySocket extends Component {
         );
 
         if (this.state.model && x.length === this.state.inputIndexes.length) {
-          function standardize(x, mean, std) {
-            return (x - mean) / std;
-          }
-
-          function normalize(x, min, max) {
-            return (x - min) / (max - min);
-          }
           let modifiedX = [];
           for (var i = 0; i < x.length; i++) {
             let obj = this.state.config.sensors[x_names[i]];
             if (this.state.config.differentValueRanges) {
-              modifiedX.push(standardize(x[i], obj.mean, obj.std));
+              modifiedX.push(this.standardize(x[i], obj.mean, obj.std));
             } else {
-              modifiedX.push(normalize(x[i], obj.min, obj.max));
+              modifiedX.push(this.normalize(x[i], obj.min, obj.max));
             }
           }
           let errorPoint = false;
@@ -387,13 +441,6 @@ class MySocket extends Component {
         } else {
           console.log("no model");
         }
-
-        console.log(
-          "datapoints",
-          numberOfDatapoints,
-          "error",
-          numberOfErrorDatapoints
-        );
 
         if (this.state.data.length === 400) {
           predictions.shift();
@@ -501,6 +548,18 @@ class MySocket extends Component {
         <button onClick={this.closeConnection}>Close connection</button>
         <button onClick={this.openConnection}>Open connection</button>
         <h4>Plot of livestream data</h4>
+        <div>
+          {this.state.config &&
+            this.state.config.input.map(inputValue => (
+              <div>
+                {inputValue}:{" "}
+                <input onChange={this.onChange(inputValue)} type="number" />
+              </div>
+            ))}
+          {this.state.manuallyPredictedOutput !== null && (
+            <div>Predicted value: {this.state.manuallyPredictedOutput}</div>
+          )}
+        </div>
         {this.state.config && this.state.config.output && (
           <h5>Showing data for: {this.state.config.output[0]}</h5>
         )}
