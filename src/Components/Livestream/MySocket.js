@@ -457,9 +457,49 @@ class MySocket extends Component {
 
   loadSources = () => {};
 
+  closeConnection = () => {
+    this.ws.close();
+  };
+
+  openConnection = () => {
+    this.ws = new WebSocket(URL);
+    this.ws.binaryType = "arraybuffer";
+
+    this.ws.onopen = () => {
+      // on connecting, do nothing but log it to the console
+      console.log("connected");
+      this.initParser();
+    };
+
+    let counter = 0;
+    this.ws.onmessage = evt => {
+      // on receiving a message, add it to the list of messages
+      if (counter === 0) {
+        if (evt.data.byteLength > 0) {
+          const data = evt.data;
+          let decoder = new TextDecoder("utf-8");
+
+          const sourceID = decoder.decode(new Uint8Array(data, 0, 4));
+          this.parseData(data.slice(4), sourceID);
+        } else {
+          console.log("pong"); // why pong?
+        }
+      }
+      // counter += 1;
+      // counter = counter % 5;
+    };
+
+    this.ws.onclose = () => {
+      console.log("disconnected");
+      // automatically try to reconnect on connection loss
+    };
+  };
+
   render() {
     return (
       <div>
+        <button onClick={this.closeConnection}>Close connection</button>
+        <button onClick={this.openConnection}>Open connection</button>
         <h4>Plot of livestream data</h4>
         {this.state.config && this.state.config.output && (
           <h5>Showing data for: {this.state.config.output[0]}</h5>
