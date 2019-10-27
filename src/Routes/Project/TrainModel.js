@@ -104,10 +104,9 @@ const TrainModel = ({ match }) => {
     train(dataPointsLocal, configLocal);
   }, []);
 
+  // removes null-values 
   function preprocessData(data) {
-    // TODO:
-    // remove outliers
-    // remove Null-values
+    data = data.filter(x => !Object.values(x).some(y => y === "" || y == null));
     return data;
   }
 
