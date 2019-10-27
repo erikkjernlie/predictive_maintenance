@@ -31,8 +31,7 @@ import {
   loadData,
   uploadData,
   uploadConfig,
-  loadConfigMod,
-  loadCSVData
+  loadProcessedConfig
 } from "./transferLib.js";
 import {
   getFeatureTargetSplit,
@@ -41,7 +40,7 @@ import {
   getBasicModel,
   getComplexModel
 } from "./machineLearningLib.js";
-import { fetchModel, fetchConfig } from "../../stores/sensors/sensorsActions";
+import { fetchModel } from "./transferLib.js";
 
 let dataPoints;
 let sensors = [];
@@ -133,7 +132,7 @@ const CurrentProject = ({ match }) => {
     console.log("LAST LOADED", projectName);
     setLoading(true);
 
-    await loadConfigMod(projectName, setSensorData);
+    await loadProcessedConfig(projectName, setSensorData);
     await loadData(projectName, setDataPoints);
     setSensors(sensorData.sensorNames);
     console.log("dataPoints", dataPoints);

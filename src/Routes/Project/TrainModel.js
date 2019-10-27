@@ -19,7 +19,7 @@ import {
   getCovarianceMatrix,
   getReducedDataset,
   shuffleData,
-  fillConfig,
+  fillConfigWithDataValues,
   shouldStandardize
 } from "./statisticsLib.js";
 import {
@@ -30,7 +30,7 @@ import {
 import { 
   loadConfig,
   loadData,
-  uploadConfigMod
+  uploadProcessedConfig
 } from "./transferLib.js";
 
 import {
@@ -59,7 +59,8 @@ const modelParams = {
   min_R2_score: 0.5,
   decent_R2_score: 0.8,
   max_mean_diff: 100,
-  max_mean_diff: 10
+  max_std_diff: 10,
+  cov_limit: 0.9,
 };
 
 const TrainModel = ({ match }) => {
@@ -111,21 +112,19 @@ const TrainModel = ({ match }) => {
   }
 
   async function train(data, configuration) {
-    console.log("data, inside train", data);
     data = preprocessData(data);
-    fillConfig(data, configuration);
+    fillConfigWithDataValues(data, configuration);
     data = shuffleData(data);
-    console.log("data shuffled", data);
     let [features, targets] = getFeatureTargetSplit(
-      data, configLocal
+      data, configuration
     );
     console.log("features", features);
     console.log("targets", targets);
     console.log("Covariance matrix", getCovarianceMatrix(features));
-    if (configuration.reduceTrainingTime) {
-      features = getReducedDataset(features);
+    if (configuration.reduceTrainingTime && configuration.input.length > 2) {
+      features = getReducedDataset(features, modelParams.cov_limit);
     }
-    if (shouldStandardize(features, configLocal.max_mean_diff)) {
+    if (shouldStandardize(features, modelParams.max_mean_diff, modelParams.max_std_diff)) {
       console.log("features were standardized");
       features = standardizeData(features, configuration);
       configuration.differentValueRanges = true;
@@ -134,7 +133,6 @@ const TrainModel = ({ match }) => {
       features = normalizeData(features, configuration);
       configuration.differentValueRanges = false;
     }
-
     console.log("features, processed", features);
     console.log("targets, processed", targets);
     const [x_train, x_test, y_train, y_test] = getTestTrainSplit(
@@ -143,12 +141,8 @@ const TrainModel = ({ match }) => {
       modelParams.test_train_split
     );
 
-    console.log("x_train", x_train);
     const tensors = convertToTensors(x_train, x_test, y_train, y_test);
-    console.log("trainFeatures", tensors.trainFeatures);
-    console.log("testFeatures", tensors.testFeatures);
-    console.log("trainTargets", tensors.trainTargets);
-    console.log("testTargets", tensors.testTargets);
+
     let model;
     let predictions;
     let tempR2 = 0;
@@ -174,7 +168,7 @@ const TrainModel = ({ match }) => {
     await model.save("indexeddb://" + projectName + "/model").then(() => {
       console.log("Model saved to indexeddb");
     });
-    uploadConfigMod(configLocal, projectName);
+    uploadProcessedConfig(configLocal, projectName);
     setDataPointsProcessed(dataPointsLocal);
     setConfigProcessed(configLocal);
     setLastStep(true);
@@ -203,7 +197,7 @@ const TrainModel = ({ match }) => {
     });
 
     const lossContainer = document.getElementById("lossCanvas");
-    const callbacks = tfvis.show.fitCallbacks(lossContainer, ["loss", "acc"], {
+    const callbacks = tfvis.show.fitCallbacks(lossContainer, ["loss"], {
       callbacks: ["onEpochEnd"]
     });
     await model.fit(xTrain, yTrain, {

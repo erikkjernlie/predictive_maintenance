@@ -36,20 +36,21 @@ export function getCovarianceMatrix(dataset) {
   return covariances;
 }
 
-export function getReducedDataset(dataset) {
+export function getReducedDataset(dataset, limit) {
   const cov = getCovarianceMatrix(dataset);
   let clone = JSON.parse(JSON.stringify(dataset));
   for (var i = 0; i < dataset[0].length; i++) {
     for (var j = i + 1; j < dataset[0].length; j++) {
-      if (cov[i][j] > 0.9) {
+      if (cov[i][j] > limit) {
         clone = clone.map(x => x.slice(0, i).concat(x.slice(i + 1)));
+        break;
       }
     }
   }
   return clone;
 }
 
-export function fillConfig(data, config) {
+export function fillConfigWithDataValues(data, config) {
   Object.keys(data[0]).forEach(function(key) {
     let column = data.map(x => Number(x[key]));
     let mean_val = mean(column);
@@ -60,9 +61,6 @@ export function fillConfig(data, config) {
     config.sensors[key]["std"] = standardDeviation_val;
     config.sensors[key]["max"] = max_val;
     config.sensors[key]["min"] = min_val;
-    config.sensors[key]["standardize"] = x =>
-      (x - mean_val) / standardDeviation_val;
-    config.sensors[key]["normalize"] = x => (x - min_val) / (max_val - min_val);
   });
 }
 
