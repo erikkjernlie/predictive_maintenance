@@ -99,7 +99,6 @@ export async function fetchModel(projectName) {
   } catch (err) {
     console.error(err);
   } finally {
-    console.log("hmm");
   }
 }
 
@@ -112,11 +111,15 @@ export async function fetchProcessedConfig(projectName) {
 }
 
 export async function fetchConfig(projectName) {
-  console.log("projectName", projectName);
-  const downloadRefConfig = storage.ref(`${projectName}/config.json`);
-  return downloadRefConfig.getDownloadURL().then(async url => {
-    return fetch(url).then(response => response.json());
-  });
+  try {
+    const downloadRefConfig = storage.ref(`${projectName}/config.json`);
+    return downloadRefConfig.getDownloadURL().then(async url => {
+      return fetch(url).then(response => response.json());
+    });
+  } catch (err) {
+    console.log(err);
+  } finally {
+  }
 }
 
 export function setProjectName(value) {

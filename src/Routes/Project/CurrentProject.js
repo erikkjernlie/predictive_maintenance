@@ -31,7 +31,8 @@ import {
   loadData,
   uploadData,
   uploadConfig,
-  loadConfigMod
+  loadConfigMod,
+  loadCSVData
 } from "./transferLib.js";
 import {
   getFeatureTargetSplit,
@@ -40,7 +41,7 @@ import {
   getBasicModel,
   getComplexModel
 } from "./machineLearningLib.js";
-import { fetchModel } from "../../stores/sensors/sensorsActions";
+import { fetchModel, fetchConfig } from "../../stores/sensors/sensorsActions";
 
 let dataPoints;
 let sensors = [];
@@ -61,7 +62,14 @@ function setSensorData(d) {
 const CurrentProject = ({ match }) => {
   const { projectName } = match.params;
   const [currentSensor, setCurrentSensor] = useState("");
-  const conf = useConfig();
+
+  const [liveData, setLiveData] = useState(true);
+
+  const [CSVData, setCSVData] = useState(null);
+
+  if (!CSVData) {
+    loadData(projectName, setCSVData);
+  }
 
   const [loading, setLoading] = useState(false);
 
@@ -141,6 +149,10 @@ const CurrentProject = ({ match }) => {
     // console.log(conf);
   }, []);
 
+  const changeLiveData = liveData => {
+    setLiveData(liveData);
+  };
+
   return (
     <div className="Container">
       <div className="CurrentProject__Title">
@@ -152,57 +164,51 @@ const CurrentProject = ({ match }) => {
         lastLoadedProjectName.length === 0 && (
           <div>You currently have no current project selected. </div>
         )}
+
+      <button onClick={() => changeLiveData(!liveData)}>CHANGE</button>
       {!loading && (
         <div>
-          <MySocket
-            projectName={match.params.projectName}
-            conf={conf}
-            predict={() => predict()}
-            model={model}
-          />
-        </div>
-      )}
-      {!loading && (
-        <div>
-          <div className="Setup__Option">
-            Your sensors (choose one if you have not selected any):
-          </div>
-          <div className="CurrentProject__SensorsList">
-            {sensors.map(sensor => (
-              <div
-                className={currentSensor === sensor ? "SelectedSensor" : ""}
-                onClick={() => {
-                  setCurrentSensor(sensor);
-                }}
-                key={sensor}
-              >
-                {sensor}
-              </div>
-            ))}
-          </div>
-          {currentSensor && (
-            <div>
-              <Sensor
-                sensor={currentSensor}
-                dataPoints={dataPoints}
-                sensors={sensors}
+          {
+            <div className={!liveData ? "show" : "hide"}>
+              <MySocket
+                projectName={match.params.projectName}
+                predict={() => predict()}
+                model={model}
               />
             </div>
-          )}
-          <div>
-            <SingleSensor
-              sensor={currentSensor}
-              dataPoints={plot_y}
-              sensors={sensors}
-            />
-          </div>
-          <div>
-            <SingleSensor
-              sensor={currentSensor}
-              dataPoints={plot_pred}
-              sensors={sensors}
-            />
-          </div>
+          }
+          {
+            <div className={liveData ? "show" : "hide"}>
+              <div className="Setup__Option">
+                Your sensors (choose one if you have not selected any):
+              </div>
+              <div className="CurrentProject__SensorsList">
+                {CSVData &&
+                  Object.keys(CSVData[0]).map(sensor => (
+                    <div
+                      className={
+                        currentSensor === sensor ? "SelectedSensor" : ""
+                      }
+                      onClick={() => {
+                        setCurrentSensor(sensor);
+                      }}
+                      key={sensor}
+                    >
+                      {sensor}
+                    </div>
+                  ))}
+              </div>
+              {currentSensor && (
+                <div>
+                  <Sensor
+                    sensor={currentSensor}
+                    dataPoints={CSVData}
+                    sensors={Object.keys(CSVData[0])}
+                  />
+                </div>
+              )}
+            </div>
+          }
         </div>
       )}
     </div>

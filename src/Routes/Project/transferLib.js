@@ -100,6 +100,15 @@ export async function loadData(project, func) {
   });
 }
 
+export async function loadCSVData(project) {
+  const downloadRefData = storage.ref(`${project}/data.csv`);
+  await downloadRefData.getDownloadURL().then(async url => {
+    await csv(url).then(data => {
+      console.log("loadData", data);
+    });
+  });
+}
+
 export async function getTensorflowModel(project, setModel) {
   let model = await tf.loadLayersModel("indexeddb://" + project + "/model");
   setModel(model);
