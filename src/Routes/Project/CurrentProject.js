@@ -164,7 +164,9 @@ const CurrentProject = ({ match }) => {
           <div>You currently have no current project selected. </div>
         )}
 
-      <button onClick={() => changeLiveData(!liveData)}>CHANGE</button>
+      <button onClick={() => changeLiveData(!liveData)}>
+        See {!liveData ? "historical data" : "live data"}.
+      </button>
       {!loading && (
         <div>
           {
