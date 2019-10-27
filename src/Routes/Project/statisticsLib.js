@@ -72,12 +72,15 @@ export function shouldStandardize(data, max_mean_diff, max_std_diff) {
       if (i !== j) {
         const mean1 = mean(columnData[i]);
         const mean2 = mean(columnData[j]);
-        if (mean1 / mean2 > max_mean_diff || mean1 / mean2 < (1/max_mean_diff)) {
+        if (
+          mean1 / mean2 > max_mean_diff ||
+          mean1 / mean2 < 1 / max_mean_diff
+        ) {
           return true;
         } else {
           const std1 = standardDeviation(columnData[i]);
           const std2 = standardDeviation(columnData[j]);
-          if (std1 / std2 > max_mean_diff || std1 / std2 < (1/max_mean_diff)) {
+          if (std1 / std2 > max_std_diff || std1 / std2 < 1 / max_std_diff) {
             return true;
           }
         }

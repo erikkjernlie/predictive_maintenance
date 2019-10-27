@@ -551,7 +551,7 @@ class MySocket extends Component {
         <div>
           {this.state.config &&
             this.state.config.input.map(inputValue => (
-              <div>
+              <div key={inputValue}>
                 {inputValue}:{" "}
                 <input onChange={this.onChange(inputValue)} type="number" />
               </div>
