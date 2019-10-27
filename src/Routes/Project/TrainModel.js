@@ -1,20 +1,22 @@
 import React, { useState, useEffect } from "react";
 import { useModels } from "../../stores/models/modelsStore";
+
 import {
   useConfigProcessed,
   useDataPointsProcessed
 } from "../../stores/sensors/sensorsStore";
+
 import "./TrainModel.css";
 import { Link } from "react-router-dom";
 
 import * as tf from "@tensorflow/tfjs";
 import * as tfvis from "@tensorflow/tfjs-vis";
+
 import {
   getR2Score,
   normalizeData,
   standardizeData,
   getCovarianceMatrix,
-  getDatasetByColumns,
   getReducedDataset,
   shuffleData,
   fillConfig,
@@ -24,14 +26,23 @@ import {
   setDataPointsProcessed,
   setConfigProcessed
 } from "../../stores/sensors/sensorsActions";
-import { loadConfig, loadData, uploadConfigMod } from "./transferLib.js";
+
+import { 
+  loadConfig,
+  loadData,
+  uploadConfigMod
+} from "./transferLib.js";
+
 import {
   getFeatureTargetSplit,
   getTestTrainSplit,
   convertToTensors,
   getBasicModel,
-  getComplexModel
+  getComplexModel,
+  getBasicModelWithRegularization,
+  getComplexModelWithRegularization,
 } from "./machineLearningLib.js";
+
 import DataInfo from "../../Components/Sensor/DataInfo";
 
 // 1. "My dataset has columns with very different value ranges" --> true: standardization, false: normalzation
@@ -46,7 +57,9 @@ const modelParams = {
   optimizer: tf.train.adam(0.01),
   loss: "meanSquaredError",
   min_R2_score: 0.5,
-  decent_R2_score: 0.8 // change this to a fair value
+  decent_R2_score: 0.8,
+  max_mean_diff: 100,
+  max_mean_diff: 10
 };
 
 const TrainModel = ({ match }) => {
@@ -55,6 +68,7 @@ const TrainModel = ({ match }) => {
   const [lastStep, setLastStep] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [dataInfo, setDataInfo] = useState({});
+  const [hasTrained, setHasTrained] = useState(false);
 
   const [R2, setR2] = useState(-1000);
 
@@ -74,8 +88,6 @@ const TrainModel = ({ match }) => {
   async function fetchData() {
     await loadConfig(projectName, setConfigLocal);
     await loadData(projectName, setDataPointsLocal);
-    console.log("dataP", dataPointsLocal);
-    console.log("conf", configLocal);
   }
 
   useEffect(async () => {
@@ -98,42 +110,22 @@ const TrainModel = ({ match }) => {
     return data;
   }
 
-  function mapValuesToTheRightFuckingFormatMotherfucker(dataset) {
-    const inputs = configLocal.input.concat(configLocal.internal);
-    const outputs = dataset.map(x => [Number(x[configLocal.output[0]])]);
-    let transferedData = [];
-    dataset.forEach(function(dataRow) {
-      let row = [];
-      inputs.forEach(function(inputName) {
-        row.push(Number(dataRow[inputName]));
-      });
-      transferedData.push(row);
-    });
-    return [transferedData, outputs];
-  }
-
   async function train(data, configuration) {
     console.log("data, inside train", data);
     data = preprocessData(data);
     fillConfig(data, configuration);
     data = shuffleData(data);
     console.log("data shuffled", data);
-    let [features, targets] = mapValuesToTheRightFuckingFormatMotherfucker(
-      data
+    let [features, targets] = getFeatureTargetSplit(
+      data, configLocal
     );
-    console.log("features_new", features);
-    console.log("targets_new", targets);
-    //[features, targets] = getFeatureTargetSplit(data, configuration);
-    //features = features.map(x => Object.values(x).map(y => Number(y)));
-    //targets = targets.map(x => Object.values(x).map(y => Number(y)));
-    //console.log("features", features);
-    //console.log("targets", targets);
+    console.log("features", features);
+    console.log("targets", targets);
     console.log("Covariance matrix", getCovarianceMatrix(features));
     if (configuration.reduceTrainingTime) {
       features = getReducedDataset(features);
     }
-    console.log(shouldStandardize(features));
-    if (shouldStandardize(features)) {
+    if (shouldStandardize(features, configLocal.max_mean_diff)) {
       console.log("features were standardized");
       features = standardizeData(features, configuration);
       configuration.differentValueRanges = true;
@@ -159,22 +151,26 @@ const TrainModel = ({ match }) => {
     console.log("testTargets", tensors.testTargets);
     let model;
     let predictions;
-    let tempR2 = -1000;
+    let tempR2 = 0;
     while (tempR2 < modelParams.min_R2_score) {
       model = await trainModel(
         tensors.trainFeatures,
         tensors.trainTargets,
         tensors.testFeatures,
         tensors.testTargets,
-        configuration
+        configuration,
+        false
       );
       predictions = model.predict(tensors.testFeatures);
       //console.log("PREDICT", predictions);
       tempR2 = getR2Score(predictions.arraySync(), y_test).rSquared;
       console.log("R2 score", tempR2);
       setR2(tempR2);
+      if (!hasTrained) {
+        setHasTrained(true);
+      }
     }
-    
+
     await model.save("indexeddb://" + projectName + "/model").then(() => {
       console.log("Model saved to indexeddb");
     });
@@ -184,19 +180,20 @@ const TrainModel = ({ match }) => {
     setLastStep(true);
   }
 
-  async function trainModel(xTrain, yTrain, xTest, yTest, configuration) {
-    // console.log("Start training");
-    // const params = ui.loadTrainParametersFromUI();
-
-    console.log("xTrain", xTrain);
-
-    console.log("xtrain shape", xTrain.shape[1]);
-    // Define the topology of the model: two dense layers.
+  async function trainModel(xTrain, yTrain, xTest, yTest, configuration, regularize) {
     let model;
     if (configuration.isComplex) {
-      model = getComplexModel(xTrain.shape[1], yTrain.shape[1], modelParams);
+      if (regularize) {
+        model = getComplexModel(xTrain.shape[1], yTrain.shape[1], modelParams);
+      } else {
+        model = getComplexModelWithRegularization(xTrain.shape[1], yTrain.shape[1], modelParams);
+      }
     } else {
-      model = getBasicModel(xTrain.shape[1], yTrain.shape[1], modelParams);
+      if (regularize) {
+        model = getBasicModel(xTrain.shape[1], yTrain.shape[1], modelParams);
+      } else {
+        model = getBasicModelWithRegularization(xTrain.shape[1], yTrain.shape[1], modelParams);
+      }
     }
     model.summary();
 
@@ -209,9 +206,7 @@ const TrainModel = ({ match }) => {
     const callbacks = tfvis.show.fitCallbacks(lossContainer, ["loss", "acc"], {
       callbacks: ["onEpochEnd"]
     });
-    const beginMs = performance.now();
-    // Call `model.fit` to train the model.
-    const history = await model.fit(xTrain, yTrain, {
+    await model.fit(xTrain, yTrain, {
       epochs: modelParams.epochs,
       validationData: [xTest, yTest],
       callbacks: callbacks
@@ -229,6 +224,13 @@ const TrainModel = ({ match }) => {
           <h4>Loss</h4>
           <div className="canvases" id="lossCanvas"></div>
         </div>
+        {hasTrained && (
+          <div>
+            <h4>R2 score: {R2}</h4>
+            <p>The R2 score reflects the accuracy of the predictions on the test set. Perfect predictions will give an R2 score of 1, while always guessing the mean will give a score of 0. Anything lower than 0 means the model performed worse than always guessing the mean.</p>
+          </div>
+        )}
+        
         {R2 >= modelParams.decent_R2_score && (
           <div style={{ backgroundColor: "green", padding: "5px" }}>
             Training was successful
