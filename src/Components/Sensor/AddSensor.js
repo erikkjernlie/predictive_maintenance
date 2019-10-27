@@ -116,10 +116,10 @@ const AddSensor = props => {
         <input onChange={handleUnit} />
       </td>
       <td>
-        <input onChange={handleMinValue} />
+        <input type="number" onChange={handleMinValue} />
       </td>
       <td>
-        <input onChange={handleMaxValue} />
+        <input type="number" onChange={handleMaxValue} />
       </td>
     </tr>
   );

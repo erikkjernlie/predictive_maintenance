@@ -18,6 +18,7 @@ import {
   fetchConfig,
   fetchProcessedConfig
 } from "../../stores/sensors/sensorsActions";
+import Plot from "react-plotly.js";
 
 // const URL = "ws://169.254.109.234:1337";
 const URL = "ws://tvilling.digital:1337";
@@ -31,6 +32,7 @@ class MySocket extends Component {
 
   state = {
     sourceBuffers: {},
+    timeSinceLastError: null,
     packetCounter: 0,
     topics: [],
     pushDataIntervalID: undefined,
@@ -38,6 +40,8 @@ class MySocket extends Component {
     time: [],
     predictions: [],
     outputNames: [],
+    numberOfDatapoints: 0,
+    numberOfErrorDatapoints: 0,
     model: null,
     outputIndex: 0,
     inputIndexes: [],
@@ -79,7 +83,6 @@ class MySocket extends Component {
     if (this.state.model) {
       // model is a promise
       // console.log(this.props.model); MODLE IS A PROMISE
-      console.log(dataPoint);
       const prediction = this.state.model
         .predict(tf.tensor2d([dataPoint], [1, dataPoint.length]))
         .dataSync();
@@ -137,6 +140,8 @@ class MySocket extends Component {
       // model = await tf.loadLayersModel("indexeddb://" + project + "/model");
       const model = await fetchModel(this.props.projectName);
       const config = await fetchProcessedConfig(this.props.projectName);
+      const configFromProjectSetup = await fetchConfig(this.props.projectName);
+      // console.log("CONFIG FROM PROJECT SETUP", configFromProjectSetup);
       /*
 
       function setConfig(val) {
@@ -151,7 +156,8 @@ class MySocket extends Component {
 
       this.setState({
         config: config,
-        model: model
+        model: model,
+        configFromProjectSetup: configFromProjectSetup
       });
 
       await fetchAuthCookie();
@@ -297,8 +303,12 @@ class MySocket extends Component {
         let output = unpacked[this.state.outputIndex + 3];
 
         let predictions = this.state.predictions;
+        let numberOfDatapoints = this.state.numberOfDatapoints;
+        let numberOfErrorDatapoints = this.state.numberOfErrorDatapoints;
 
         let data = this.state.data.concat(output);
+        numberOfDatapoints = numberOfDatapoints + 1;
+
         let time = this.state.time.concat(
           new Date(unpacked[unpacked.length - 1] * 1000)
         );
@@ -314,24 +324,38 @@ class MySocket extends Component {
           let modifiedX = [];
           for (var i = 0; i < x.length; i++) {
             let obj = this.state.config.sensors[x_names[i]];
-            console.log(this.state.config);
             if (this.state.config.differentValueRanges) {
               modifiedX.push(standardize(x[i], obj.mean, obj.std));
             } else {
-              // modifiedX.push(x[i]);
               modifiedX.push(normalize(x[i], obj.min, obj.max));
             }
           }
-          console.log("modifiedX", modifiedX);
-          console.log("x", x);
           let predictedVal = this.predictValue(modifiedX);
-          console.log(this.predictValue([22, 3.1]));
-          console.log(this.predictValue([3.1, 22]));
 
           predictions.push(predictedVal);
+
+          // HANDLE IF BELOW MIN OR OVER MAX
+          if (this.state.configFromProjectSetup.predictedValueAbsoluteError) {
+            let predictedValueAbsoluteError = this.state.configFromProjectSetup
+              .predictedValueAbsoluteError;
+            if (Math.abs(predictedVal - output) > predictedValueAbsoluteError) {
+              numberOfErrorDatapoints = numberOfErrorDatapoints += 1;
+              console.log("TOO BIG DIFFERENCE");
+              this.setState({
+                timeSinceLastError: new Date()
+              });
+            }
+          }
         } else {
           console.log("no model");
         }
+
+        console.log(
+          "datapoints",
+          numberOfDatapoints,
+          "error",
+          numberOfErrorDatapoints
+        );
 
         if (this.state.data.length === 400) {
           predictions.shift();
@@ -341,8 +365,11 @@ class MySocket extends Component {
         this.setState({
           predictions: predictions,
           data: data,
-          time: time
+          time: time,
+          numberOfDatapoints: numberOfDatapoints,
+          numberOfErrorDatapoints: numberOfErrorDatapoints
         });
+        // if (Math.abs(predictedVal - this.state.configFromProjectSetup[])
       }
       break;
     }
@@ -401,6 +428,25 @@ class MySocket extends Component {
               y: this.state.predictions,
               x: this.state.time,
               marker: { color: "red" }
+            }
+          ]}
+        />
+        {this.state.timeSinceLastError && (
+          <div>{this.state.timeSinceLastError.toString()}</div>
+        )}
+        <Plot
+          data={[
+            {
+              values: [
+                this.state.numberOfDatapoints -
+                  this.state.numberOfErrorDatapoints,
+                this.state.numberOfErrorDatapoints
+              ],
+              labels: ["OK", "NOT OK"],
+              type: "pie",
+              marker: {
+                colors: ["green", "red"]
+              }
             }
           ]}
         />

@@ -107,7 +107,7 @@ const ProjectSetup = props => {
         <div className="ProjectName">Choose a name for the project</div>
         <input onChange={handleProjectName} />
         <div className="ProjectName">Set an URL for livefeed data</div>
-        <input onChange={handleURL} />
+        <input onChange={handleURL} value="tvilling.digital" />
         {step2 && (
           <div>
             <div className="Setup__Option">Step 2: Upload dataset (.csv)</div>
@@ -173,19 +173,25 @@ const ProjectSetup = props => {
                   Percentage:{" "}
                   <input
                     type="number"
-                    onChange={e => setPredictedValuePercentageError(e.target.value)}
+                    onChange={e =>
+                      setPredictedValuePercentageError(e.target.value)
+                    }
                   />
                 </div>
                 <div className="sensorInput">
                   Absolute:{" "}
                   <input
                     type="number"
-                    onChange={e => setPredictedValueAbsoluteError(e.target.value)}
+                    onChange={e =>
+                      setPredictedValueAbsoluteError(e.target.value)
+                    }
                   />
                 </div>
               </div>
             </div>
-            <button className="buttonStyle" onClick={startTraining}>Start training your model</button>
+            <button className="buttonStyle" onClick={startTraining}>
+              Start training your model
+            </button>
             {startingTraining && <div>Loading...</div>}
           </div>
         )}
