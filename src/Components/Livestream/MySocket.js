@@ -217,8 +217,8 @@ class MySocket extends Component {
           console.log("pong"); // why pong?
         }
       }
-      counter += 1;
-      counter = counter % 10;
+      // counter += 1;
+      // counter = counter % 0;
     };
 
     this.ws.onclose = () => {
@@ -291,11 +291,13 @@ class MySocket extends Component {
             data: d,
             time: e
           });
-          if (this.state.model) {
+          if (this.state.model && x.length === this.state.inputIndexes.length) {
+            let p = this.state.predictions;
             let predictedVal = this.predictValue(x);
-            const predictions = this.state.predictions.concat(predictedVal);
+            p.shift();
+            p.concat(predictedVal);
             this.setState({
-              predictions: predictions
+              predictions: p
             });
           } else {
             console.log("no model");
