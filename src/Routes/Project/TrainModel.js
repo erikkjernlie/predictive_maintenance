@@ -161,7 +161,7 @@ const TrainModel = ({ match }) => {
         tensors.testFeatures,
         tensors.testTargets,
         configuration,
-        false
+        useRegularization
       );
       predictions = model.predict(tensors.testFeatures);
       //console.log("PREDICT", predictions);
