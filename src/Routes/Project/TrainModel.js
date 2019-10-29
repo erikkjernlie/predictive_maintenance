@@ -50,7 +50,8 @@ const modelParams = {
   decent_R2_score: 0.8,
   max_mean_diff: 100,
   max_std_diff: 10,
-  cov_limit: 0.9
+  cov_limit: 0.9,
+  max_iterations: 4,
 };
 
 const TrainModel = ({ match }) => {
@@ -58,6 +59,7 @@ const TrainModel = ({ match }) => {
   const [hasLoaded, setHasLoaded] = useState(false);
   const [dataInfo, setDataInfo] = useState({});
   const [hasTrained, setHasTrained] = useState(false);
+  const [trainingFailed, setTrainingFailed] = useState(false);
 
   const [R2, setR2] = useState(-1000);
 
@@ -103,6 +105,7 @@ const TrainModel = ({ match }) => {
   }
 
   async function train(data, configuration) {
+    let useRegularization = false;
     data = preprocessData(data);
     fillConfigWithDataValues(data, configuration);
     data = shuffleData(data);
@@ -147,7 +150,11 @@ const TrainModel = ({ match }) => {
     let model;
     let predictions;
     let tempR2 = 0;
+    let trainCounter = 0;
     while (tempR2 < modelParams.min_R2_score) {
+      if (trainCounter > 1) {
+        useRegularization = true;
+      }
       model = await trainModel(
         tensors.trainFeatures,
         tensors.trainTargets,
@@ -164,15 +171,22 @@ const TrainModel = ({ match }) => {
       if (!hasTrained) {
         setHasTrained(true);
       }
+      trainCounter += 1;
+      if (trainCounter > modelParams.max_iterations && !(tempR2 >= modelParams.min_R2_score)) {
+        setTrainingFailed(true);
+        break;
+      }
     }
 
-    await model.save("indexeddb://" + projectName + "/model").then(() => {
-      console.log("Model saved to indexeddb");
-    });
-    uploadProcessedConfig(configLocal, projectName);
-    setDataPointsProcessed(dataPointsLocal);
-    setConfigProcessed(configLocal);
-    setLastStep(true);
+    if (tempR2 >= modelParams.min_R2_score) {
+      await model.save("indexeddb://" + projectName + "/model").then(() => {
+        console.log("Model saved to indexeddb");
+      });
+      uploadProcessedConfig(configLocal, projectName);
+      setDataPointsProcessed(dataPointsLocal);
+      setConfigProcessed(configLocal);
+      setLastStep(true);
+    }
   }
 
   async function trainModel(
@@ -257,10 +271,22 @@ const TrainModel = ({ match }) => {
             retraining your model by refreshing
           </div>
         )}
+        {trainingFailed && (
+          <div>
+            <button className="buttonStyle" onClick={() => window.location.reload(false)}>Retry training</button>
+          </div>
+        )}
         {lastStep && (
-          <Link to={"/" + projectName}>
-            <button className="buttonStyle">See data and visualization</button>
-          </Link>
+          <div>
+            <div>
+              <button className="buttonStyle" onClick={() => window.location.reload(false)}>Retrain model</button>
+            </div>
+            <div>
+              <Link to={"/" + projectName}>
+                <button className="buttonStyle">See data and visualization</button>
+              </Link>
+            </div>
+          </div>
         )}
       </div>
     </div>
