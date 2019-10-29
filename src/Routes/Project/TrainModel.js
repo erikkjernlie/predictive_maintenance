@@ -1,10 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useModels } from "../../stores/models/modelsStore";
-
-import {
-  useConfigProcessed,
-  useDataPointsProcessed
-} from "../../stores/sensors/sensorsStore";
 
 import "./TrainModel.css";
 import { Link } from "react-router-dom";
@@ -60,8 +54,6 @@ const modelParams = {
 };
 
 const TrainModel = ({ match }) => {
-  const configProcessed = useConfigProcessed();
-  const dataPointsProcessed = useDataPointsProcessed();
   const [lastStep, setLastStep] = useState(false);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [dataInfo, setDataInfo] = useState({});
@@ -87,17 +79,21 @@ const TrainModel = ({ match }) => {
     await loadData(projectName, setDataPointsLocal);
   }
 
-  useEffect(async () => {
-    await fetchData();
-    console.log("Done fetching", configLocal);
-    setHasLoaded(true);
-    setDataInfo({
-      input: configLocal.input.concat(configLocal.internal),
-      output: configLocal.output,
-      training: dataPointsLocal.length * (1 - modelParams.test_train_split),
-      testing: dataPointsLocal.length * modelParams.test_train_split
-    });
-    train(dataPointsLocal, configLocal);
+  useEffect(() => {
+    async function startFetching() {
+      await fetchData().then(function(val) {
+        console.log("Done fetching", configLocal);
+        setHasLoaded(true);
+        setDataInfo({
+          input: configLocal.input.concat(configLocal.internal),
+          output: configLocal.output,
+          training: dataPointsLocal.length * (1 - modelParams.test_train_split),
+          testing: dataPointsLocal.length * modelParams.test_train_split
+        });
+        train(dataPointsLocal, configLocal);
+      });
+    }
+    startFetching();
   }, []);
 
   // removes null-values
