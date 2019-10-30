@@ -116,10 +116,12 @@ export async function getTensorflowModel(project, setModel) {
 
 export async function fetchProcessedConfig(projectName) {
   console.log("projectName", projectName);
-  const downloadRefConfig = storage.ref(`${projectName}/config_mod.json`);
-  return downloadRefConfig.getDownloadURL().then(async url => {
-    return fetch(url).then(response => response.json());
-  });
+  if (projectName) {
+    const downloadRefConfig = storage.ref(`${projectName}/config_mod.json`);
+    return downloadRefConfig.getDownloadURL().then(async url => {
+      return fetch(url).then(response => response.json());
+    });
+  }
 }
 
 export async function fetchConfig(projectName) {
@@ -132,10 +134,12 @@ export async function fetchConfig(projectName) {
 
 export async function fetchModel(projectName) {
   try {
-    const model = await tf.loadLayersModel(
-      "indexeddb://" + projectName + "/model"
-    );
-    return model;
+    if (projectName) {
+      const model = await tf.loadLayersModel(
+        "indexeddb://" + projectName + "/model"
+      );
+      return model;
+    }
   } catch (err) {
     console.error(err);
   } finally {

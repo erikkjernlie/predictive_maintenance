@@ -88,14 +88,10 @@ class MySocket extends Component {
         return Number(this.state.inputValuesForPrediction[obj.name]);
       });
       if (outputs.length === this.state.config.input.length) {
-        return this.predictValue(
-          this.state.model,
-          
-        );
+        return this.predictValue(this.state.model);
       } else {
-        return NaN
+        return NaN;
       }
-      
     }
   };
 
@@ -600,22 +596,26 @@ class MySocket extends Component {
             and had the following error message: {this.state.errorMessage}.
           </div>
         )}
-        <Plot
-          data={[
-            {
-              values: [
-                this.state.numberOfDatapoints -
-                  this.state.numberOfErrorDatapoints,
-                this.state.numberOfErrorDatapoints
-              ],
-              labels: ["OK", "NOT OK"],
-              type: "pie",
-              marker: {
-                colors: ["green", "red"]
+        {this.state.numberOfDatapoints && (
+          <Plot
+            data={[
+              {
+                values: [
+                  Number(
+                    this.state.numberOfDatapoints -
+                      this.state.numberOfErrorDatapoints
+                  ),
+                  Number(this.state.numberOfErrorDatapoints)
+                ],
+                labels: ["OK", "NOT OK"],
+                type: "pie",
+                marker: {
+                  colors: ["green", "red"]
+                }
               }
-            }
-          ]}
-        />
+            ]}
+          />
+        )}
       </div>
     );
   }
