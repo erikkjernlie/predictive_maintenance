@@ -91,22 +91,26 @@ export async function loadProcessedConfig(project, func) {
 }
 
 export async function loadData(project, func) {
-  const downloadRefData = storage.ref(`${project}/data.csv`);
-  await downloadRefData.getDownloadURL().then(async url => {
-    await csv(url).then(data => {
-      console.log("loadData", data);
-      func(data);
+  if (project) {
+    const downloadRefData = storage.ref(`${project}/data.csv`);
+    await downloadRefData.getDownloadURL().then(async url => {
+      await csv(url).then(data => {
+        console.log("loadData", data);
+        func(data);
+      });
     });
-  });
+  }
 }
 
 export async function loadCSVData(project) {
-  const downloadRefData = storage.ref(`${project}/data.csv`);
-  await downloadRefData.getDownloadURL().then(async url => {
-    await csv(url).then(data => {
-      console.log("loadData", data);
+  if (project) {
+    const downloadRefData = storage.ref(`${project}/data.csv`);
+    await downloadRefData.getDownloadURL().then(async url => {
+      await csv(url).then(data => {
+        console.log("loadData", data);
+      });
     });
-  });
+  }
 }
 
 export async function getTensorflowModel(project, setModel) {

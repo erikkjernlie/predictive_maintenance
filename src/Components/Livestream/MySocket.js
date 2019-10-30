@@ -83,12 +83,16 @@ class MySocket extends Component {
     });
 
     if (this.state.model) {
-      let outputs = this.state.inputIndexes.map(obj => {
+      let inputToPredicting = this.state.inputIndexes.map(obj => {
         console.log(Number(this.state.inputValuesForPrediction[obj.name]));
         return Number(this.state.inputValuesForPrediction[obj.name]);
       });
-      if (outputs.length === this.state.config.input.length) {
-        return this.predictValue(this.state.model);
+      if (inputToPredicting.length === this.state.config.input.length) {
+        let val = this.predictValue(this.state.model, inputToPredicting);
+        this.setState({
+          manuallyPredictedOutput: val
+        });
+        return val;
       } else {
         return NaN;
       }
@@ -135,14 +139,15 @@ class MySocket extends Component {
       dataPoint = normalizeData(dataPoint);
     }
     */
-
-    const prediction = model
-      .predict(tf.tensor2d([dataPoint], [1, dataPoint.length]))
-      .dataSync();
-    if (prediction.length === 1) {
-      return prediction[0];
-    } else {
-      return prediction;
+    if (dataPoint) {
+      const prediction = model
+        .predict(tf.tensor2d([dataPoint], [1, dataPoint.length]))
+        .dataSync();
+      if (prediction.length === 1) {
+        return prediction[0];
+      } else {
+        return prediction;
+      }
     }
   }
 
