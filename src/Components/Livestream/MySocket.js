@@ -83,13 +83,19 @@ class MySocket extends Component {
     });
 
     if (this.state.model) {
-      return this.predictValue(
-        this.state.model,
-        this.state.inputIndexes.map(obj => {
-          console.log(Number(this.state.inputValuesForPrediction[obj.name]));
-          return Number(this.state.inputValuesForPrediction[obj.name]);
-        })
-      );
+      let outputs = this.state.inputIndexes.map(obj => {
+        console.log(Number(this.state.inputValuesForPrediction[obj.name]));
+        return Number(this.state.inputValuesForPrediction[obj.name]);
+      });
+      if (outputs.length === this.state.config.input.length) {
+        return this.predictValue(
+          this.state.model,
+          
+        );
+      } else {
+        return NaN
+      }
+      
     }
   };
 
@@ -222,7 +228,7 @@ class MySocket extends Component {
         });
       }
       let outputIndex = outputNames.indexOf(config.output[0]);
-
+      console.log(inputIndexes);
       this.setState({
         outputNames: topicsJSON["0000"].output_names,
         outputIndex: outputIndex,
