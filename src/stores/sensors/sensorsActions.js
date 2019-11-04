@@ -17,7 +17,22 @@ function setConfigVariable(variable, value) {
     config: config
   });
 }
+
+function addSensorNamesCount(value) {
+  let content = {}
+  for (var i = 0; i < value.length; i++) {
+    content[value[i]] = i;
+  }
+  console.log(content);
+  let config = sensorsStore.getState().config;
+  config["sensorIndexes"] = content;
+  sensorsStore.setState({
+    config: config
+  });
+}
+
 export function setSensorNames(value) {
+  addSensorNamesCount(value);
   addConfigVariable("sensorNames", value);
 }
 
