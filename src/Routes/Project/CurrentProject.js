@@ -76,6 +76,8 @@ const CurrentProject = ({ match }) => {
 
   const model = fetchModel(projectName);
 
+  const config = useConfig();
+
   let plot_y = [];
   let plot_pred = [];
 
@@ -128,29 +130,11 @@ const CurrentProject = ({ match }) => {
     console.log(plot_pred);
   }
 
-  async function doStuff() {
-    console.log("LAST LOADED", projectName);
-    setLoading(true);
-
-    await loadProcessedConfig(projectName, setSensorData);
-    await loadData(projectName, setDataPoints);
-    setSensors(sensorData.sensorNames);
-    console.log("dataPoints", dataPoints);
-    console.log("sensorData", sensorData);
-    console.log("sensors", sensors);
-    // await setModel(projectName);
-    setLoading(false);
-    doPredictions(model);
-  }
-
-  useEffect(() => {
-    // doStuff();
-    // console.log(conf);
-  }, []);
-
   const changeLiveData = liveData => {
     setLiveData(liveData);
   };
+
+  console.log("sneosr data", sensorData);
 
   return (
     <div className="Container">
@@ -165,9 +149,9 @@ const CurrentProject = ({ match }) => {
         )}
 
       <button onClick={() => changeLiveData(!liveData)}>
-        See {!liveData ? "historical data" : "live data"}.
+        See {!liveData ? "live data" : "historical data"}.
       </button>
-      {!loading && (
+      {!loading && config && (
         <div>
           {
             <div className={liveData ? "show" : "hide"}>
@@ -175,6 +159,7 @@ const CurrentProject = ({ match }) => {
                 projectName={match.params.projectName}
                 predict={() => predict()}
                 model={model}
+                config={config}
               />
             </div>
           }

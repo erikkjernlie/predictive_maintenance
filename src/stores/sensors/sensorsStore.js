@@ -16,7 +16,8 @@ const store = createStore({
     isComplex: false,
     data: [],
     predictedValueAbsoluteError: 0,
-    predictedValuePercentageError: 0
+    predictedValuePercentageError: 0,
+    liveFeedURL: "ws://tvilling.digital:1337"
   },
   configProcessed: {
     input: [],
@@ -30,7 +31,8 @@ const store = createStore({
     isComplex: false,
     data: [],
     predictedValueAbsoluteError: 0,
-    predictedValuePercentageError: 0
+    predictedValuePercentageError: 0,
+    liveFeedURL: "ws://tvilling.digital:1337"
   }
 });
 

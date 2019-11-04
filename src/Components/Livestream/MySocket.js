@@ -13,23 +13,22 @@ import {
 
 import * as tf from "@tensorflow/tfjs";
 import { useProjectName, useConfig } from "../../stores/sensors/sensorsStore";
-import {
-  fetchModel,
-  fetchConfig,
-  fetchProcessedConfig
-} from "../../Routes/Project/transferLib";
 import Plot from "react-plotly.js";
 import moment from "moment";
+import {
+  fetchModel,
+  fetchProcessedConfig,
+  fetchConfig
+} from "../../Routes/Project/transferLib";
 
-// const URL = "ws://169.254.109.234:1337";
 const URL = "ws://tvilling.digital:1337";
 
 class MySocket extends Component {
-  ws = new WebSocket(URL);
-
   constructor(props) {
     super(props);
   }
+
+  ws = new WebSocket(URL);
 
   state = {
     sourceBuffers: {},
@@ -139,6 +138,7 @@ class MySocket extends Component {
       dataPoint = normalizeData(dataPoint);
     }
     */
+
     if (dataPoint) {
       const prediction = model
         .predict(tf.tensor2d([dataPoint], [1, dataPoint.length]))
@@ -221,6 +221,7 @@ class MySocket extends Component {
       const topicsJSON = await fetchTopics();
       let outputNames = topicsJSON["0000"].output_names;
       let inputIndexes = [];
+      console.log(config.input, outputNames);
       for (let i = 0; i < config.input.length; i++) {
         let index = outputNames.indexOf(config.input[i]);
         inputIndexes.push({

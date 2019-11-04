@@ -17,7 +17,7 @@ export function getFeatureTargetSplit(data, config) {
 */
 
 export function getFeatureTargetSplit(dataset, config) {
-  const inputs = config.input.concat(config.internal);
+  const inputs = config.input;
   const targets = dataset.map(x => [Number(x[config.output[0]])]);
   let features = [];
   dataset.forEach(function(dataRow) {
@@ -87,7 +87,11 @@ export function getComplexModel(inputSize, outputSize, modelParams) {
   return model;
 }
 
-export function getBasicModelWithRegularization(inputSize, outputSize, modelParams) {
+export function getBasicModelWithRegularization(
+  inputSize,
+  outputSize,
+  modelParams
+) {
   const model = tf.sequential();
   model.add(
     tf.layers.dense({

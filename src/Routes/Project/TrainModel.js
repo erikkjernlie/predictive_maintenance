@@ -51,7 +51,7 @@ const modelParams = {
   max_mean_diff: 100,
   max_std_diff: 10,
   cov_limit: 0.9,
-  max_iterations: 4,
+  max_iterations: 4
 };
 
 const TrainModel = ({ match }) => {
@@ -87,7 +87,7 @@ const TrainModel = ({ match }) => {
         console.log("Done fetching", configLocal);
         setHasLoaded(true);
         setDataInfo({
-          input: configLocal.input.concat(configLocal.internal),
+          input: configLocal.input,
           output: configLocal.output,
           training: dataPointsLocal.length * (1 - modelParams.test_train_split),
           testing: dataPointsLocal.length * modelParams.test_train_split
@@ -172,7 +172,10 @@ const TrainModel = ({ match }) => {
         setHasTrained(true);
       }
       trainCounter += 1;
-      if (trainCounter > modelParams.max_iterations && !(tempR2 >= modelParams.min_R2_score)) {
+      if (
+        trainCounter > modelParams.max_iterations &&
+        !(tempR2 >= modelParams.min_R2_score)
+      ) {
         setTrainingFailed(true);
         break;
       }
@@ -273,17 +276,29 @@ const TrainModel = ({ match }) => {
         )}
         {trainingFailed && (
           <div>
-            <button className="buttonStyle" onClick={() => window.location.reload(false)}>Retry training</button>
+            <button
+              className="buttonStyle"
+              onClick={() => window.location.reload(false)}
+            >
+              Retry training
+            </button>
           </div>
         )}
         {lastStep && (
           <div>
             <div>
-              <button className="buttonStyle" onClick={() => window.location.reload(false)}>Retrain model</button>
+              <button
+                className="buttonStyle"
+                onClick={() => window.location.reload(false)}
+              >
+                Retrain model
+              </button>
             </div>
             <div>
               <Link to={"/" + projectName}>
-                <button className="buttonStyle">See data and visualization</button>
+                <button className="buttonStyle">
+                  See data and visualization
+                </button>
               </Link>
             </div>
           </div>

@@ -32,20 +32,21 @@ const ProjectSetup = props => {
 
   const [lastStep, setLastStep] = useState(false);
   const [step2, setStep2] = useState(false);
- 
+
   const config = useConfig();
+  console.log(config);
   const dataPoints = useDataPoints();
 
   const handleProjectName = e => {
     if (e.target.value) {
       setProjectName(e.target.value);
+      setStep2(true);
     }
   };
 
   const handleURL = e => {
     if (e.target.value) {
       setLiveFeedURL(e.target.value);
-      setStep2(true);
     }
   };
 
@@ -111,7 +112,7 @@ const ProjectSetup = props => {
         <div className="ProjectName">Choose a name for the project</div>
         <input onChange={handleProjectName} />
         <div className="ProjectName">Set an URL for livefeed data</div>
-        <input onChange={handleURL} value="tvilling.digital" />
+        <input onChange={handleURL} placeholder="ws://tvilling.digital:1337" />
         {step2 && (
           <div>
             <div className="Setup__Option">Step 2: Upload dataset (.csv)</div>
@@ -152,9 +153,10 @@ const ProjectSetup = props => {
             <div className="Setup__Option">Step 4: Describe your dataset</div>
             <div className="Setup__ProjectName">
               <div>
-                Do you consider the data to be very complex?
-                Any function that can be approximated with a (non-high-degree) polynomial is generally not considered complex.
-                </div>
+                Do you consider the data to be very complex? Any function that
+                can be approximated with a (non-high-degree) polynomial is
+                generally not considered complex.
+              </div>
               <Checkbox
                 color="default"
                 checked={localIsComplex}
@@ -163,8 +165,10 @@ const ProjectSetup = props => {
             </div>
             <div className="Setup__ProjectName">
               <div>
-                Do you want to possibly reduce the training time by discarding covariant features? 
-                Training machine learning models require many calculations, which can be sped up by considering a reduced number of features.
+                Do you want to possibly reduce the training time by discarding
+                covariant features? Training machine learning models require
+                many calculations, which can be sped up by considering a reduced
+                number of features.
               </div>
               <Checkbox
                 color="default"
@@ -174,9 +178,9 @@ const ProjectSetup = props => {
             </div>
             <div className="Setup__ProjectName">
               <div>
-                On your predicted value, how much prediction error do you allow before
-                you suspect a failure?
-                <div className="sensorInput">
+                On your predicted value, how much prediction error do you allow
+                before you suspect a failure?
+                {/*<div className="sensorInput">
                   Percentage:{" "}
                   <input
                     type="number"
@@ -184,7 +188,7 @@ const ProjectSetup = props => {
                       setPredictedValuePercentageError(e.target.value)
                     }
                   />
-                </div>
+                  </div>*/}
                 <div className="sensorInput">
                   Absolute:{" "}
                   <input
