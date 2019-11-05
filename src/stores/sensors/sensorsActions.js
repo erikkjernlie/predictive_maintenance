@@ -33,7 +33,11 @@ function addSensorNamesCount(value) {
 
 export function setSensorNames(value) {
   addSensorNamesCount(value);
-  addConfigVariable("sensorNames", value);
+  let config = sensorsStore.getState().config;
+  config["sensorNames"] = value;
+  sensorsStore.setState({
+    config: config
+  });
 }
 
 export function setDataPoints(dataPoints) {

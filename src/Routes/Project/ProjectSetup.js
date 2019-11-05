@@ -60,9 +60,12 @@ const ProjectSetup = props => {
   };
 
   const selectDataset = data => {
+    console.log(data[0]);
+    console.log("selectDataset", data);
     setSelectedDataset(true);
     setDataPoints(data);
     setSensorNames(data[0]);
+    console.log("sensorNames", config.sensorNames);
   };
 
   const handleUpload = () => {

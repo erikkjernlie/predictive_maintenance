@@ -23,6 +23,7 @@ import {
 
 const URL = "ws://tvilling.digital:1337";
 let hasLiveFeed = false;
+let hasProjectName = false;
 
 function setHasLiveFeed(bool) {
   hasLiveFeed = bool;
@@ -194,81 +195,86 @@ class MySocket extends Component {
     (async () => {
       const project = this.props.project;
       // model = await tf.loadLayersModel("indexeddb://" + project + "/model");
-      const model = await fetchModel(this.props.projectName);
-      const config = await fetchProcessedConfig(this.props.projectName);
-      const configFromProjectSetup = await fetchConfig(this.props.projectName);
-      console.log("config, componentDidMount", config);
-      console.log("liveFeedURL", config.liveFeedURL);
-      this.setState({
-        config: config,
-        model: model,
-        configFromProjectSetup: configFromProjectSetup
-      });
-      if (config.liveFeedURL === "ws://tvilling.digital:1337") {
-        setHasLiveFeed(true);
-  
-        await fetchAuthCookie();
-        const topicsJSON = await fetchTopics();
-        let outputNames = topicsJSON["0000"].output_names;
-        let inputIndexes = [];
-        console.log(config.input, outputNames);
-        for (let i = 0; i < config.input.length; i++) {
-          let index = outputNames.indexOf(config.input[i]);
-          inputIndexes.push({
-            index: index,
-            name: config.input[i]
-          });
-        }
-        let outputIndex = outputNames.indexOf(config.output[0]);
-        console.log(inputIndexes);
-        this.setState({
-          outputNames: topicsJSON["0000"].output_names,
-          outputIndex: outputIndex,
-          inputIndexes: inputIndexes
-        }); // hard coded "0000"
-        console.log("topicsJSON", topicsJSON); // HER ARE THE NAMES, INSIDE THIS ONE
-        // console.log("FETCHING TOPICS", topicsJSON);
-        if (!topicsJSON) return;
-        this.setState({
-          topics: Object.entries(topicsJSON).map(topic => ({
-            id: topic[0],
-            url: topic[1].url,
-            byteFormat: topic[1].byte_format,
-            channels: this.makeChannels(topic[1]) || []
-          }))
-        });
-  
-        const subscribe = subscribeToSource("0000");
-  
-        // ADD EVERYTHING TO SELECTED SOURCES
-  
-        const subscribeSources = this.state.selectedSources
-          .filter(
-            source =>
-              source.selectedChannels !== undefined &&
-              source.selectedChannels.length > 0
-          )
-          .map(source => ({
-            id: source.id,
-            name: source.url.split("/")[2],
-            byteFormat: source.byteFormat,
-            url: source.url,
-            subscribedChannels: this.unBundleMatrixChannels(
-              source.selectedChannels
-            )
-          }));
-  
-        /*
-        await this.$store.dispatch(
-          "channelModule/generateDataSources",
-          subscribeSources
-        );
-        EventBus.$emit(EVENTS.subscribe, subscribeSources);
-        */
-      } else {
-        setHasLiveFeed(false);
-      }
       
+      if (this.props.projectName !== undefined) {
+        hasProjectName = true;
+        const model = await fetchModel(this.props.projectName);
+        const config = await fetchProcessedConfig(this.props.projectName);
+        const configFromProjectSetup = await fetchConfig(this.props.projectName);
+        console.log("config, componentDidMount", config);
+        console.log("liveFeedURL", config.liveFeedURL);
+        this.setState({
+          config: config,
+          model: model,
+          configFromProjectSetup: configFromProjectSetup
+        });
+        if (config.liveFeedURL === "ws://tvilling.digital:1337") {
+          setHasLiveFeed(true);
+    
+          await fetchAuthCookie();
+          const topicsJSON = await fetchTopics();
+          let outputNames = topicsJSON["0000"].output_names;
+          let inputIndexes = [];
+          console.log(config.input, outputNames);
+          for (let i = 0; i < config.input.length; i++) {
+            let index = outputNames.indexOf(config.input[i]);
+            inputIndexes.push({
+              index: index,
+              name: config.input[i]
+            });
+          }
+          let outputIndex = outputNames.indexOf(config.output[0]);
+          console.log(inputIndexes);
+          this.setState({
+            outputNames: topicsJSON["0000"].output_names,
+            outputIndex: outputIndex,
+            inputIndexes: inputIndexes
+          }); // hard coded "0000"
+          console.log("topicsJSON", topicsJSON); // HER ARE THE NAMES, INSIDE THIS ONE
+          // console.log("FETCHING TOPICS", topicsJSON);
+          if (!topicsJSON) return;
+          this.setState({
+            topics: Object.entries(topicsJSON).map(topic => ({
+              id: topic[0],
+              url: topic[1].url,
+              byteFormat: topic[1].byte_format,
+              channels: this.makeChannels(topic[1]) || []
+            }))
+          });
+    
+          const subscribe = subscribeToSource("0000");
+    
+          // ADD EVERYTHING TO SELECTED SOURCES
+    
+          const subscribeSources = this.state.selectedSources
+            .filter(
+              source =>
+                source.selectedChannels !== undefined &&
+                source.selectedChannels.length > 0
+            )
+            .map(source => ({
+              id: source.id,
+              name: source.url.split("/")[2],
+              byteFormat: source.byteFormat,
+              url: source.url,
+              subscribedChannels: this.unBundleMatrixChannels(
+                source.selectedChannels
+              )
+            }));
+    
+          /*
+          await this.$store.dispatch(
+            "channelModule/generateDataSources",
+            subscribeSources
+          );
+          EventBus.$emit(EVENTS.subscribe, subscribeSources);
+          */
+        } else {
+          setHasLiveFeed(false);
+        }
+      } else {
+        hasProjectName = false;
+      }
     })();
 
     this.ws.binaryType = "arraybuffer";
@@ -547,80 +553,89 @@ class MySocket extends Component {
   render() {
     return (
       <div>
-        <h4>Make manual predictions</h4>
-        <div>
-          {this.state.config &&
-            this.state.config.input.map(inputValue => (
-              <div key={inputValue}>
-                {inputValue}:{" "}
-                <input onChange={this.onChange(inputValue)} type="number" />
-              </div>
-            ))}
-          {this.state.manuallyPredictedOutput !== null && (
-            <div>Predicted value: {this.state.manuallyPredictedOutput}</div>
-          )}
-        </div>
-        {hasLiveFeed && (
+        {hasProjectName && (
           <div>
-          {this.state.config && this.state.config.output && (
+            <h4>Make manual predictions</h4>
+          <div>
+            {this.state.config &&
+              this.state.config.input.map(inputValue => (
+                <div key={inputValue}>
+                  {inputValue}:{" "}
+                  <input onChange={this.onChange(inputValue)} type="number" />
+                </div>
+              ))}
+            {this.state.manuallyPredictedOutput !== null && (
+              <div>Predicted value: {this.state.manuallyPredictedOutput}</div>
+            )}
+          </div>
+          {hasLiveFeed && (
             <div>
-              <h4>Plot of livestream data</h4>
-              <h5>Showing data for: {this.state.config.output[0]}</h5>
-            </div>
-          )}
-          <button onClick={this.closeConnection}>Close connection</button>
-          <button onClick={this.openConnection}>Open connection</button>
-          <PlotIt
-            dataPoints={[
-              {
-                y: this.state.data,
-                x: this.state.time,
-                name: "Real value",
-                type: "scattergl"
-              },
-              {
-                y: this.state.predictions,
-                type: "scattergl",
-                name: "Predicted",
-                x: this.state.time,
-                marker: { color: "red" }
-              }
-            ]}
-          />
-  
-          <h4>Plot of operational status</h4>
-          {this.state.config && this.state.config.output && (
-            <h5>Showing data for: {this.state.config.output[0]}</h5>
-          )}
-          {this.state.timeSinceLastError && (
-            <div>
-              The last error happened at{" "}
-              {moment(this.state.timeSinceLastError.toString()).format(
-                "MMMM Do YYYY, h:mm:ss a"
-              )}{" "}
-              and had the following error message: {this.state.errorMessage}.
-            </div>
-          )}
-          {this.state.numberOfDatapoints && (
-            <Plot
-              data={[
+            {this.state.config && this.state.config.output && (
+              <div>
+                <h4>Plot of livestream data</h4>
+                <h5>Showing data for: {this.state.config.output[0]}</h5>
+              </div>
+            )}
+            <button onClick={this.closeConnection}>Close connection</button>
+            <button onClick={this.openConnection}>Open connection</button>
+            <PlotIt
+              dataPoints={[
                 {
-                  values: [
-                    Number(
-                      this.state.numberOfDatapoints -
-                        this.state.numberOfErrorDatapoints
-                    ),
-                    Number(this.state.numberOfErrorDatapoints)
-                  ],
-                  labels: ["OK", "NOT OK"],
-                  type: "pie",
-                  marker: {
-                    colors: ["green", "red"]
-                  }
+                  y: this.state.data,
+                  x: this.state.time,
+                  name: "Real value",
+                  type: "scattergl"
+                },
+                {
+                  y: this.state.predictions,
+                  type: "scattergl",
+                  name: "Predicted",
+                  x: this.state.time,
+                  marker: { color: "red" }
                 }
               ]}
             />
+    
+            <h4>Plot of operational status</h4>
+            {this.state.config && this.state.config.output && (
+              <h5>Showing data for: {this.state.config.output[0]}</h5>
+            )}
+            {this.state.timeSinceLastError && (
+              <div>
+                The last error happened at{" "}
+                {moment(this.state.timeSinceLastError.toString()).format(
+                  "MMMM Do YYYY, h:mm:ss a"
+                )}{" "}
+                and had the following error message: {this.state.errorMessage}.
+              </div>
+            )}
+            {this.state.numberOfDatapoints && (
+              <Plot
+                data={[
+                  {
+                    values: [
+                      Number(
+                        this.state.numberOfDatapoints -
+                          this.state.numberOfErrorDatapoints
+                      ),
+                      Number(this.state.numberOfErrorDatapoints)
+                    ],
+                    labels: ["OK", "NOT OK"],
+                    type: "pie",
+                    marker: {
+                      colors: ["green", "red"]
+                    }
+                  }
+                ]}
+              />
+            )}
+            </div>
           )}
+          </div>
+        )}
+        {!hasProjectName && (
+          <div>
+            <h4>No project loaded</h4>
           </div>
         )}
       </div>
