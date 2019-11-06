@@ -34,7 +34,6 @@ const ProjectSetup = props => {
   const [step2, setStep2] = useState(false);
 
   const config = useConfig();
-  console.log(config);
   const dataPoints = useDataPoints();
 
   const handleProjectName = e => {
@@ -60,16 +59,12 @@ const ProjectSetup = props => {
   };
 
   const selectDataset = data => {
-    console.log(data[0]);
-    console.log("selectDataset", data);
     setSelectedDataset(true);
     setDataPoints(data);
     setSensorNames(data[0]);
-    console.log("sensorNames", config.sensorNames);
   };
 
   const handleUpload = () => {
-    console.log(config);
     setUploading(true);
     uploadData(dataPoints, config["projectName"], setProgress);
     uploadConfig(config, config["projectName"], setProgress);

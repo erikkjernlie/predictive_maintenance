@@ -100,13 +100,10 @@ const CurrentProject = ({ match }) => {
 
   function doPredictions(model) {
     let predName = sensorData.output[0];
-    console.log(model);
     let dataCopy = JSON.parse(JSON.stringify(dataPoints));
     let y_real = dataPoints.map(x => Number(x[predName]));
     dataCopy.forEach(x => delete x[predName]);
     let x_real = dataCopy.map(x => Object.values(x).map(y => Number(y)));
-    console.log("y_real", y_real);
-    console.log("x_real", x_real);
     if (sensorData.hasDifferentValueRanges) {
       x_real = standardizeData(x_real);
     } else {
@@ -115,26 +112,18 @@ const CurrentProject = ({ match }) => {
 
     let i = 0;
     x_real.forEach(p => {
-      console.log("p", p);
       let prediction = model
         .predict(tf.tensor2d([p], [1, p.length]))
         .dataSync();
-      console.log("pred", prediction);
-      console.log("real", y_real[i]);
       plot_y.push(y_real[i]);
       plot_pred.push(prediction[0]);
       i = i + 1;
     });
-
-    console.log(plot_y);
-    console.log(plot_pred);
   }
 
   const changeLiveData = liveData => {
     setLiveData(liveData);
   };
-
-  console.log("sneosr data", sensorData);
 
   return (
     <div className="Container">

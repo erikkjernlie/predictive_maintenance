@@ -11,10 +11,6 @@ const SingleSensor = props => {
 
   const newData = props.dataPoints;
 
-  console.log(props.dataPoints);
-
-  // NOW WE CAN ALSO PLOT UNIT
-  // AND WE ALSO NEED TO TAKE IN TIMESTAMPS!!!!!!!!!!
   const data = [
     {
       y: newData,

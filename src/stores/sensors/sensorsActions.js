@@ -19,11 +19,10 @@ function setConfigVariable(variable, value) {
 }
 
 function addSensorNamesCount(value) {
-  let content = {}
+  let content = {};
   for (var i = 0; i < value.length; i++) {
     content[value[i]] = i;
   }
-  console.log(content);
   let config = sensorsStore.getState().config;
   config["sensorIndexes"] = content;
   sensorsStore.setState({

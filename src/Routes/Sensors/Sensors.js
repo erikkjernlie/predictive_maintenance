@@ -18,7 +18,6 @@ const Sensors = props => {
   useEffect(() => {
     csv("/rig_good.csv").then(data => {
       let sensorNames = Object.keys(data[0]);
-      console.log(sensorNames);
       let dataPoints = data.slice(1);
       setSensorNames(sensorNames);
       setDataPoints(dataPoints);
@@ -30,16 +29,12 @@ const Sensors = props => {
       "https://firebasestorage.googleapis.com/v0/b/tpk4450-project.appspot.com/o/rig_good.csv?alt=media&token=9792ce1c-7196-4a0d-80c2-f83ad35d7744"
     );
     const dataset2 = tf.data.csv("./rig_good.csv");
-    console.log("TF DATA", dataset2);
   }, []);
 
   async function train() {
-    console.log("train model");
     const [xTrain, yTrain, xTest, yTest] = data.getIrisData(0.15);
-    console.log(xTrain, xTest);
 
     const model = await trainModel(xTrain, yTrain, xTest, yTest);
-    console.log("PREDICT", model.predict(xTest));
   }
 
   async function trainModel(xTrain, yTrain, xTest, yTest) {

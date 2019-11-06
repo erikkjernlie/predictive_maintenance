@@ -1,21 +1,6 @@
 import "./TrainModel.css";
 import * as tf from "@tensorflow/tfjs";
 
-/*
-export function getFeatureTargetSplit(data, config) {
-  const feats = config.input.concat(config.internal);
-  const targs = config.output;
-  console.log("feats", feats);
-  console.log("targs", targs);
-  let features = JSON.parse(JSON.stringify(data)); // deepcopy
-  let targets = JSON.parse(JSON.stringify(data)); // deepcopy
-  console.log("FEATURES", features);
-  feats.forEach(feat => targets.forEach(x => delete x[feat]));
-  targs.forEach(targ => features.forEach(x => delete x[targ]));
-  return [features, targets];
-}
-*/
-
 export function getFeatureTargetSplit(dataset, config) {
   const inputs = config.input;
   const targets = dataset.map(x => [Number(x[config.output[0]])]);

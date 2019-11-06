@@ -5,7 +5,6 @@ export const rootAPI = "http://tvilling.digital:1337";
 
 export async function fetchTopics() {
   const topics = await getJSONResponse(rootAPI + "/topics/");
-  console.log("TOPICS", topics);
   return topics;
 }
 

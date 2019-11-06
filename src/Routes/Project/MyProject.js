@@ -26,7 +26,6 @@ const MyProject = ({ match }) => {
   const lastLoadedProjectName = useProjectName();
 
   useEffect(() => {
-    console.log("data", dataPoints);
     if (dataPoints.length === 0 || projectName !== lastLoadedProjectName) {
       setLoading(true);
 
@@ -42,7 +41,7 @@ const MyProject = ({ match }) => {
         });
       });
     } else {
-      console.log("WE HAVE ALREADY FETCHED DATA");
+      console.log("Already fetched data.");
     }
   }, []);
 

@@ -23,7 +23,6 @@ export function uploadData(data, project, progressMethod) {
 }
 
 export function uploadConfig(config, project, progressMethod) {
-  console.log("CONFIG HERE WE GO", config);
   const configblob = new Blob([JSON.stringify(config)], {
     type: "application/json"
   });
@@ -72,7 +71,6 @@ export async function loadConfig(project, func) {
     await fetch(url)
       .then(response => response.json())
       .then(jsonData => {
-        console.log("loadConfig", jsonData);
         func(jsonData);
       });
   });
@@ -84,7 +82,6 @@ export async function loadProcessedConfig(project, func) {
     await fetch(url)
       .then(response => response.json())
       .then(jsonData => {
-        console.log("loadConfig", jsonData);
         func(jsonData);
       });
   });
@@ -95,7 +92,6 @@ export async function loadData(project, func) {
     const downloadRefData = storage.ref(`${project}/data.csv`);
     await downloadRefData.getDownloadURL().then(async url => {
       await csv(url).then(data => {
-        console.log("loadData", data);
         func(data);
       });
     });
@@ -106,9 +102,7 @@ export async function loadCSVData(project) {
   if (project) {
     const downloadRefData = storage.ref(`${project}/data.csv`);
     await downloadRefData.getDownloadURL().then(async url => {
-      await csv(url).then(data => {
-        console.log("loadData", data);
-      });
+      await csv(url).then(data => {});
     });
   }
 }
@@ -119,7 +113,6 @@ export async function getTensorflowModel(project, setModel) {
 }
 
 export async function fetchProcessedConfig(projectName) {
-  console.log("projectName", projectName);
   if (projectName) {
     const downloadRefConfig = storage.ref(`${projectName}/config_mod.json`);
     return downloadRefConfig.getDownloadURL().then(async url => {
@@ -129,7 +122,6 @@ export async function fetchProcessedConfig(projectName) {
 }
 
 export async function fetchConfig(projectName) {
-  console.log("projectName", projectName);
   const downloadRefConfig = storage.ref(`${projectName}/config.json`);
   return downloadRefConfig.getDownloadURL().then(async url => {
     return fetch(url).then(response => response.json());
@@ -147,7 +139,6 @@ export async function fetchModel(projectName) {
   } catch (err) {
     console.error(err);
   } finally {
-    console.log("hmm");
   }
 }
 

@@ -84,7 +84,6 @@ const TrainModel = ({ match }) => {
   useEffect(() => {
     async function startFetching() {
       await fetchData().then(function(val) {
-        console.log("Done fetching", configLocal);
         setHasLoaded(true);
         setDataInfo({
           input: configLocal.input,
@@ -110,9 +109,6 @@ const TrainModel = ({ match }) => {
     fillConfigWithDataValues(data, configuration);
     data = shuffleData(data);
     let [features, targets] = getFeatureTargetSplit(data, configuration);
-    console.log("features", features);
-    console.log("targets", targets);
-    console.log("Covariance matrix", getCovarianceMatrix(features));
     if (configuration.reduceTrainingTime && configuration.input.length > 2) {
       features = getReducedDataset(features, modelParams.cov_limit);
     }

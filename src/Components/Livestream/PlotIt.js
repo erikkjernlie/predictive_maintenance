@@ -14,19 +14,6 @@ export default class PlotIt extends Component {
     dataPoint: 0
   };
 
-  componentDidUpdate(prevProps) {
-    /*
-    if (prevProps.dataPoints !== this.props.dataPoints) {
-      console.log(this.props.dataPoints);
-      if (this.props.dataPoints && this.props.dataPoints.length >= 0) {
-        this.setState({
-          dataPoint: this.props.dataPoints[9]
-        });
-      }
-    }
-    */
-  }
-
   render() {
     return (
       <div>
@@ -36,7 +23,6 @@ export default class PlotIt extends Component {
           config={this.state.config}
           frames={this.state.frames}
         />
-        {/*Value: {this.state.dataPoint}*/}
       </div>
     );
   }

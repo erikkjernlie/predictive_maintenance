@@ -15,10 +15,7 @@ export function getProcessedData(dataset, testSplit) {
       dataByClass.push([]);
       targetsByClass.push([]);
     }
-    console.log(dataByClass);
-    console.log(targetsByClass);
     for (const row of newDataset) {
-      console.log("ROW", row);
       const target = row[row.length - 1];
       const data = row.slice(0, row.length - 1);
       dataByClass[target].push(data);

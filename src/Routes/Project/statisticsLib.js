@@ -51,14 +51,12 @@ export function getReducedDataset(dataset, limit) {
 }
 
 export function fillConfigWithDataValues(data, config) {
-  console.log("config", config);
   Object.keys(data[0]).forEach(function(key) {
     let column = data.map(x => Number(x[key]));
     let mean_val = mean(column);
     let standardDeviation_val = standardDeviation(column);
     let max_val = max(column);
     let min_val = min(column);
-    console.log(key, column);
     if (config.sensors[key]) {
       config.sensors[key]["mean"] = mean_val;
       config.sensors[key]["std"] = standardDeviation_val;
