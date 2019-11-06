@@ -295,8 +295,8 @@ class MySocket extends Component {
           console.log("pong"); // why pong?
         }
       }
-      // counter += 1;
-      // counter = counter % 5;
+      counter += 1;
+      counter = counter % 3;
     };
 
     this.ws.onclose = () => {
@@ -543,11 +543,11 @@ class MySocket extends Component {
                       y: this.state.data,
                       x: this.state.time,
                       name: "Real value",
-                      type: "scattergl"
+                      type: "scatter"
                     },
                     {
                       y: this.state.predictions,
-                      type: "scattergl",
+                      type: "scatter",
                       name: "Predicted",
                       x: this.state.time,
                       marker: { color: "red" }

@@ -1,4 +1,4 @@
-Time  1 - default sample rate                                   ;Load [N];Displacement [mm];AccelerometerX;0 Degrees Transvers on Axle                                     ;Rosett +45 Degrees Along Axle                                   ;Rosett  90 Degrees Along Axle                                   ;Rosett  -45 Degrees Along Axle                                  ;Radius +45 Degrees Along Axle                                   ;MX840A_0 hardware time default sample rate                      
+Time  1 - default sample rate                                   ;Load [N];Displacement [mm];AccelerometerX;0 Degrees Transvers on Axle;Rosett +45 Degrees Along Axle;Rosett  90 Degrees Along Axle;Rosett  -45 Degrees Along Axle;Radius +45 Degrees Along Axle;MX840A_0 hardware time default sample rate
 0;-6.160934448;-0.004769754;0.016562033;0.517674148;-1.286387682;-20.32407379;-2.474252462;0.098360285;947504010.1
 0.003333333;-6.221971512;-0.004431038;-0.147478193;0.393258929;-1.129805088;27.69970512;-2.940231085;0.098360285;947504010.1
 0.006666667;-6.269805908;-0.004256339;-0.254717052;0.275501132;-1.127190948;10.45527077;-3.19158411;0.098360285;947504010.1

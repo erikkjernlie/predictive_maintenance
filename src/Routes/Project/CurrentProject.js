@@ -81,46 +81,6 @@ const CurrentProject = ({ match }) => {
   let plot_y = [];
   let plot_pred = [];
 
-  function predict(dataPoint) {
-    if (sensorData.hasDifferentValueRanges) {
-      dataPoint = standardizeData(dataPoint);
-    } else {
-      dataPoint = normalizeData(dataPoint);
-    }
-
-    const prediction = model
-      .predict(tf.tensor2d([dataPoint], [1, dataPoint.length]))
-      .dataSync();
-    if (prediction.length === 1) {
-      return prediction[0];
-    } else {
-      return prediction;
-    }
-  }
-
-  function doPredictions(model) {
-    let predName = sensorData.output[0];
-    let dataCopy = JSON.parse(JSON.stringify(dataPoints));
-    let y_real = dataPoints.map(x => Number(x[predName]));
-    dataCopy.forEach(x => delete x[predName]);
-    let x_real = dataCopy.map(x => Object.values(x).map(y => Number(y)));
-    if (sensorData.hasDifferentValueRanges) {
-      x_real = standardizeData(x_real);
-    } else {
-      x_real = normalizeData(x_real);
-    }
-
-    let i = 0;
-    x_real.forEach(p => {
-      let prediction = model
-        .predict(tf.tensor2d([p], [1, p.length]))
-        .dataSync();
-      plot_y.push(y_real[i]);
-      plot_pred.push(prediction[0]);
-      i = i + 1;
-    });
-  }
-
   const changeLiveData = liveData => {
     setLiveData(liveData);
   };
@@ -146,7 +106,6 @@ const CurrentProject = ({ match }) => {
             <div className={liveData ? "show" : "hide"}>
               <MySocket
                 projectName={match.params.projectName}
-                predict={() => predict()}
                 model={model}
                 config={config}
               />

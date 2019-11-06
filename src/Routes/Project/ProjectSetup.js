@@ -82,7 +82,7 @@ const ProjectSetup = props => {
     }
     setTimeout(() => {
       props.history.push(config.projectName + "/configuration");
-    }, 1500);
+    }, 3000);
   };
 
   const changeDatasetFact = id => {
