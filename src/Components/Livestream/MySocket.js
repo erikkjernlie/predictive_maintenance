@@ -543,11 +543,11 @@ class MySocket extends Component {
                       y: this.state.data,
                       x: this.state.time,
                       name: "Real value",
-                      type: "scattergl"
+                      type: "scatter"
                     },
                     {
                       y: this.state.predictions,
-                      type: "scattergl",
+                      type: "scatter",
                       name: "Predicted",
                       x: this.state.time,
                       marker: { color: "red" }

@@ -9,6 +9,7 @@ const ExistingProjects = () => {
   };
   const clearLocalStorage = () => {
     localStorage.clear();
+    window.location.reload();
   };
 
   return (
@@ -16,8 +17,9 @@ const ExistingProjects = () => {
       <div className="ExistingProjects__Title">Load existing projects:</div>
 
       <div className="Flex">
-        <div>Do you wish to delete existing projects?</div>
-        <button onClick={() => clearLocalStorage()}>Yes</button>
+        <button onClick={() => clearLocalStorage()}>
+          Delete existing projects.
+        </button>
       </div>
       {localStorage.getItem("projects") && (
         <div className="Content">
