@@ -214,6 +214,7 @@ class MySocket extends Component {
           const topicsJSON = await fetchTopics();
           let outputNames = topicsJSON["0000"].output_names;
           let inputIndexes = [];
+          console.log(outputNames);
           for (let i = 0; i < config.input.length; i++) {
             let index = outputNames.indexOf(config.input[i]);
             inputIndexes.push({
