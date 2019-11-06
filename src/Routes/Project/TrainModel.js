@@ -86,10 +86,14 @@ const TrainModel = ({ match }) => {
       await fetchData().then(function(val) {
         setHasLoaded(true);
         setDataInfo({
-          input: configLocal.input.join(', '),
+          input: configLocal.input.join(", "),
           output: configLocal.output,
-          training: Math.floor(dataPointsLocal.length * (1 - modelParams.test_train_split)),
-          testing: Math.ceil(dataPointsLocal.length * modelParams.test_train_split)
+          training: Math.floor(
+            dataPointsLocal.length * (1 - modelParams.test_train_split)
+          ),
+          testing: Math.ceil(
+            dataPointsLocal.length * modelParams.test_train_split
+          )
         });
         train(dataPointsLocal, configLocal);
       });
@@ -141,9 +145,8 @@ const TrainModel = ({ match }) => {
       modelParams.test_train_split
     );
 
-    console.log("train length", x_train.length)
-    console.log("test length", x_test.length)
-    
+    console.log("train length", x_train.length);
+    console.log("test length", x_test.length);
 
     const tensors = convertToTensors(x_train, x_test, y_train, y_test);
 

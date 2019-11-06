@@ -325,7 +325,6 @@ class MySocket extends Component {
   };
 
   parseData = (data, sourceID) => {
-    let counter = 0;
     const sourceBuffer = this.state.sourceBuffers[sourceID];
     if (sourceBuffer === undefined) {
       return;
