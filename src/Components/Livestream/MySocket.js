@@ -295,8 +295,8 @@ class MySocket extends Component {
           console.log("pong"); // why pong?
         }
       }
-      // counter += 1;
-      // counter = counter % 5;
+      counter += 1;
+      counter = counter % 3;
     };
 
     this.ws.onclose = () => {
