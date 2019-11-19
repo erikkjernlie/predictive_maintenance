@@ -1,6 +1,5 @@
 # READ ME
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
-Herman made a change to this readme :) 02.10.19
+This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).  
 
 ## Available Scripts
 
